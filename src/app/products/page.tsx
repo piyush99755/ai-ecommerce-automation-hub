@@ -1,4 +1,5 @@
 import { db } from '@/prisma/db';
+import Link from 'next/link';
 
 export const revalidate = 0;
 
@@ -33,9 +34,10 @@ export default async function ProductsPage() {
           {products.map((product) => {
             const isLowStock = product.stock <= 3;
             return (
-              <div
+              <Link
                 key={product.id}
-                className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden border border-gray-100 flex flex-col"
+                href={`/products/${product.slug}`}
+                className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden border border-gray-100 flex flex-col group"
               >
                 <div className="p-5 flex-1 flex flex-col">
                   <div className="flex items-center justify-between gap-2 mb-2">
@@ -53,7 +55,7 @@ export default async function ProductsPage() {
                     </span>
                   </div>
 
-                  <h2 className="text-lg font-bold text-gray-900 mb-1 leading-snug">
+                  <h2 className="text-lg font-bold text-gray-900 mb-1 leading-snug group-hover:text-indigo-600 transition-colors">
                     {product.name}
                   </h2>
 
@@ -81,7 +83,7 @@ export default async function ProductsPage() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>
