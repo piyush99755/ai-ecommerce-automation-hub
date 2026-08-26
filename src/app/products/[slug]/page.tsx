@@ -1,6 +1,7 @@
 import { db } from '@/prisma/db';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import AddToCartButton from '@/components/cart/AddToCartButton';
 
 export const revalidate = 0;
 
@@ -58,7 +59,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
           <p className="text-gray-600 text-base leading-relaxed mb-8">{product.description}</p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-gray-100">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-gray-100 mb-8">
             <div>
               <span className="text-xs text-gray-400 block uppercase tracking-wider font-semibold mb-1">
                 Price
@@ -76,6 +77,18 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                 {product.stock} units available
               </span>
             </div>
+          </div>
+
+          <div className="pt-6 border-t border-gray-100 flex items-center justify-end">
+            <AddToCartButton
+              product={{
+                id: product.id,
+                slug: product.slug,
+                name: product.name,
+                priceCents: product.priceCents,
+                stock: product.stock,
+              }}
+            />
           </div>
         </div>
       </div>
