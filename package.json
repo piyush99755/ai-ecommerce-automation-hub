@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "contract:emit": "prisma contract emit"
+    "contract:emit": "prisma contract emit",
+    "db:seed": "npx tsx src/prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^7.10.0",
