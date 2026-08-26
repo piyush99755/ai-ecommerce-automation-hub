@@ -164,12 +164,12 @@ export default function CartPage() {
                 </span>
               </div>
 
-              <button
-                disabled
-                className="w-full py-3 bg-gray-200 text-gray-500 font-semibold rounded-lg cursor-not-allowed text-center text-sm"
+              <Link
+                href="/checkout"
+                className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-sm transition-colors text-center text-sm block"
               >
-                Checkout Coming Soon
-              </button>
+                Proceed to Checkout →
+              </Link>
             </div>
           </div>
         </div>

@@ -1,5 +1,20 @@
 // use prisma-next
 
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
 model Product {
   id          String            @id @default(dbgenerated("gen_random_uuid()"))
   name        String
@@ -9,8 +24,42 @@ model Product {
   stock       Int
   category    String
   imageUrl    String?
+  orderItems  OrderItem[]
   createdAt   TimestamptzString @default(now())
   updatedAt   temporal.updatedAtString()
 
   @@index([category])
+}
+
+model Customer {
+  id        String            @id @default(dbgenerated("gen_random_uuid()"))
+  name      String
+  email     String            @unique
+  phone     String?
+  orders    Order[]
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+}
+
+model Order {
+  id            String            @id @default(dbgenerated("gen_random_uuid()"))
+  customer      Customer          @relation(fields: [customerId], references: [id])
+  customerId    String
+  status        OrderStatus       @default(PENDING)
+  paymentStatus PaymentStatus     @default(PENDING)
+  subtotalCents Int
+  totalCents    Int
+  items         OrderItem[]
+  createdAt     TimestamptzString @default(now())
+  updatedAt     temporal.updatedAtString()
+}
+
+model OrderItem {
+  id             String  @id @default(dbgenerated("gen_random_uuid()"))
+  order          Order   @relation(fields: [orderId], references: [id])
+  orderId        String
+  product        Product @relation(fields: [productId], references: [id])
+  productId      String
+  quantity       Int
+  unitPriceCents Int
 }
