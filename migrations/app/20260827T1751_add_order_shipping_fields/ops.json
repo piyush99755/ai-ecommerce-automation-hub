@@ -1,0 +1,170 @@
+[
+  {
+    "id": "column.public.order.carrier",
+    "label": "Add column \"carrier\" to \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "carrier",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"carrier\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "carrier"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"carrier\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD COLUMN \"carrier\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"carrier\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "carrier"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.order.deliveredAt",
+    "label": "Add column \"deliveredAt\" to \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "deliveredAt",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"deliveredAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "deliveredAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"deliveredAt\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD COLUMN \"deliveredAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"deliveredAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "deliveredAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.order.shippedAt",
+    "label": "Add column \"shippedAt\" to \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "shippedAt",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"shippedAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "shippedAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"shippedAt\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD COLUMN \"shippedAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"shippedAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "shippedAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.order.trackingNumber",
+    "label": "Add column \"trackingNumber\" to \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "trackingNumber",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"trackingNumber\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "trackingNumber"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"trackingNumber\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD COLUMN \"trackingNumber\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"trackingNumber\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "trackingNumber"
+        ]
+      }
+    ]
+  }
+]
