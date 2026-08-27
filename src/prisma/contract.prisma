@@ -17,17 +17,18 @@ enum PaymentStatus {
 }
 
 model Product {
-  id          String            @id @default(dbgenerated("gen_random_uuid()"))
-  name        String
-  slug        String            @unique
-  description String
-  priceCents  Int
-  stock       Int
-  category    String
-  imageUrl    String?
-  orderItems  OrderItem[]
-  createdAt   TimestamptzString @default(now())
-  updatedAt   temporal.updatedAtString()
+  id                String            @id @default(dbgenerated("gen_random_uuid()"))
+  name              String
+  slug              String            @unique
+  description       String
+  priceCents        Int
+  stock             Int
+  lowStockThreshold Int               @default(5)
+  category          String
+  imageUrl          String?
+  orderItems        OrderItem[]
+  createdAt         TimestamptzString @default(now())
+  updatedAt         temporal.updatedAtString()
 
   @@index([category])
 }
@@ -43,17 +44,23 @@ model Customer {
 }
 
 model Order {
-  id            String            @id @default(dbgenerated("gen_random_uuid()"))
-  customer      Customer          @relation(fields: [customerId], references: [id])
-  customerId    String
-  status        OrderStatus       @default(PENDING)
-  statusReason  String?
-  paymentStatus PaymentStatus     @default(PENDING)
-  subtotalCents Int
-  totalCents    Int
-  items         OrderItem[]
-  createdAt     TimestamptzString @default(now())
-  updatedAt     temporal.updatedAtString()
+  id                      String            @id @default(dbgenerated("gen_random_uuid()"))
+  customer                Customer          @relation(fields: [customerId], references: [id])
+  customerId              String
+  status                  OrderStatus       @default(PENDING)
+  statusReason            String?
+  paymentStatus           PaymentStatus     @default(PENDING)
+  subtotalCents           Int
+  totalCents              Int
+  stripeCheckoutSessionId String?           @unique
+  stripePaymentIntentId   String?
+  trackingNumber          String?
+  carrier                 String?
+  shippedAt               TimestamptzString?
+  deliveredAt             TimestamptzString?
+  items                   OrderItem[]
+  createdAt               TimestamptzString @default(now())
+  updatedAt               temporal.updatedAtString()
 }
 
 model OrderItem {
@@ -64,4 +71,10 @@ model OrderItem {
   productId      String
   quantity       Int
   unitPriceCents Int
+}
+
+model StripeEvent {
+  id        String            @id
+  type      String
+  createdAt TimestamptzString @default(now())
 }

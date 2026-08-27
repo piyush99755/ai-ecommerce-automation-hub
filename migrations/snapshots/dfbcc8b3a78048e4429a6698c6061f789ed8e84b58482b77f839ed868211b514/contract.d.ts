@@ -33,7 +33,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'126a25cdbf222f3072177c99f271d258b71d5442c504bb6e4b3ed19ecac3dbd2'>;
+  StorageHashBase<'dfbcc8b3a78048e4429a6698c6061f789ed8e84b58482b77f839ed868211b514'>;
 export type ExecutionHash =
   ExecutionHashBase<'502ee69058531a1a702aca8927ecd748bff4b8e9fbbb4fbdeec563f5414965fd'>;
 export type ProfileHash =
@@ -259,10 +259,6 @@ export type FieldOutputTypes = {
       readonly totalCents: CodecTypes['pg/int4@1']['output'];
       readonly stripeCheckoutSessionId: CodecTypes['pg/text@1']['output'] | null;
       readonly stripePaymentIntentId: CodecTypes['pg/text@1']['output'] | null;
-      readonly trackingNumber: CodecTypes['pg/text@1']['output'] | null;
-      readonly carrier: CodecTypes['pg/text@1']['output'] | null;
-      readonly shippedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-      readonly deliveredAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
@@ -280,7 +276,6 @@ export type FieldOutputTypes = {
       readonly description: CodecTypes['pg/text@1']['output'];
       readonly priceCents: CodecTypes['pg/int4@1']['output'];
       readonly stock: CodecTypes['pg/int4@1']['output'];
-      readonly lowStockThreshold: CodecTypes['pg/int4@1']['output'];
       readonly category: CodecTypes['pg/text@1']['output'];
       readonly imageUrl: CodecTypes['pg/text@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -313,10 +308,6 @@ export type FieldInputTypes = {
       readonly totalCents: CodecTypes['pg/int4@1']['input'];
       readonly stripeCheckoutSessionId: CodecTypes['pg/text@1']['input'] | null;
       readonly stripePaymentIntentId: CodecTypes['pg/text@1']['input'] | null;
-      readonly trackingNumber: CodecTypes['pg/text@1']['input'] | null;
-      readonly carrier: CodecTypes['pg/text@1']['input'] | null;
-      readonly shippedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
-      readonly deliveredAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
@@ -334,7 +325,6 @@ export type FieldInputTypes = {
       readonly description: CodecTypes['pg/text@1']['input'];
       readonly priceCents: CodecTypes['pg/int4@1']['input'];
       readonly stock: CodecTypes['pg/int4@1']['input'];
-      readonly lowStockThreshold: CodecTypes['pg/int4@1']['input'];
       readonly category: CodecTypes['pg/text@1']['input'];
       readonly imageUrl: CodecTypes['pg/text@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -358,20 +348,16 @@ export type StorageColumnTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
     readonly order: {
-      readonly carrier: CodecTypes['pg/text@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly customerId: CodecTypes['pg/text@1']['output'];
-      readonly deliveredAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
-      readonly shippedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly status: 'PENDING' | 'PROCESSING' | 'ON_HOLD' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
       readonly statusReason: CodecTypes['pg/text@1']['output'] | null;
       readonly stripeCheckoutSessionId: CodecTypes['pg/text@1']['output'] | null;
       readonly stripePaymentIntentId: CodecTypes['pg/text@1']['output'] | null;
       readonly subtotalCents: CodecTypes['pg/int4@1']['output'];
       readonly totalCents: CodecTypes['pg/int4@1']['output'];
-      readonly trackingNumber: CodecTypes['pg/text@1']['output'] | null;
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
     readonly orderItem: {
@@ -387,7 +373,6 @@ export type StorageColumnTypes = {
       readonly description: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly imageUrl: CodecTypes['pg/text@1']['output'] | null;
-      readonly lowStockThreshold: CodecTypes['pg/int4@1']['output'];
       readonly name: CodecTypes['pg/text@1']['output'];
       readonly priceCents: CodecTypes['pg/int4@1']['output'];
       readonly slug: CodecTypes['pg/text@1']['output'];
@@ -412,20 +397,16 @@ export type StorageColumnInputTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
     readonly order: {
-      readonly carrier: CodecTypes['pg/text@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly customerId: CodecTypes['pg/text@1']['input'];
-      readonly deliveredAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
-      readonly shippedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly status: 'PENDING' | 'PROCESSING' | 'ON_HOLD' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
       readonly statusReason: CodecTypes['pg/text@1']['input'] | null;
       readonly stripeCheckoutSessionId: CodecTypes['pg/text@1']['input'] | null;
       readonly stripePaymentIntentId: CodecTypes['pg/text@1']['input'] | null;
       readonly subtotalCents: CodecTypes['pg/int4@1']['input'];
       readonly totalCents: CodecTypes['pg/int4@1']['input'];
-      readonly trackingNumber: CodecTypes['pg/text@1']['input'] | null;
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
     readonly orderItem: {
@@ -441,7 +422,6 @@ export type StorageColumnInputTypes = {
       readonly description: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly imageUrl: CodecTypes['pg/text@1']['input'] | null;
-      readonly lowStockThreshold: CodecTypes['pg/int4@1']['input'];
       readonly name: CodecTypes['pg/text@1']['input'];
       readonly priceCents: CodecTypes['pg/int4@1']['input'];
       readonly slug: CodecTypes['pg/text@1']['input'];
@@ -573,26 +553,6 @@ type ContractBase = Omit<
                 readonly stripePaymentIntentId: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly trackingNumber: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly carrier: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly shippedAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: true;
-                };
-                readonly deliveredAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
                   readonly nullable: true;
                 };
                 readonly createdAt: {
@@ -742,15 +702,6 @@ type ContractBase = Omit<
                   readonly nativeType: 'int4';
                   readonly codecId: 'pg/int4@1';
                   readonly nullable: false;
-                };
-                readonly lowStockThreshold: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/int4@1', 5>;
-                  };
                 };
                 readonly category: {
                   readonly nativeType: 'text';
@@ -948,28 +899,6 @@ type ContractBase = Omit<
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly trackingNumber: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly carrier: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly shippedAt: {
-                readonly nullable: true;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-              readonly deliveredAt: {
-                readonly nullable: true;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
               readonly createdAt: {
                 readonly nullable: false;
                 readonly type: {
@@ -1022,10 +951,6 @@ type ContractBase = Omit<
                 readonly totalCents: { readonly column: 'totalCents' };
                 readonly stripeCheckoutSessionId: { readonly column: 'stripeCheckoutSessionId' };
                 readonly stripePaymentIntentId: { readonly column: 'stripePaymentIntentId' };
-                readonly trackingNumber: { readonly column: 'trackingNumber' };
-                readonly carrier: { readonly column: 'carrier' };
-                readonly shippedAt: { readonly column: 'shippedAt' };
-                readonly deliveredAt: { readonly column: 'deliveredAt' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
               };
@@ -1116,10 +1041,6 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
-              readonly lowStockThreshold: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
               readonly category: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -1166,7 +1087,6 @@ type ContractBase = Omit<
                 readonly description: { readonly column: 'description' };
                 readonly priceCents: { readonly column: 'priceCents' };
                 readonly stock: { readonly column: 'stock' };
-                readonly lowStockThreshold: { readonly column: 'lowStockThreshold' };
                 readonly category: { readonly column: 'category' };
                 readonly imageUrl: { readonly column: 'imageUrl' };
                 readonly createdAt: { readonly column: 'createdAt' };

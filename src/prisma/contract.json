@@ -19,6 +19,10 @@
     "product": {
       "model": "Product",
       "namespace": "public"
+    },
+    "stripeEvent": {
+      "model": "StripeEvent",
+      "namespace": "public"
     }
   },
   "domain": {
@@ -166,6 +170,13 @@
           },
           "Order": {
             "fields": {
+              "carrier": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "createdAt": {
                 "nullable": false,
                 "type": {
@@ -177,6 +188,13 @@
                 "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "deliveredAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
                   "kind": "scalar"
                 }
               },
@@ -200,6 +218,13 @@
                   "plane": "domain"
                 }
               },
+              "shippedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
               "status": {
                 "nullable": false,
                 "type": {
@@ -220,6 +245,20 @@
                   "kind": "scalar"
                 }
               },
+              "stripeCheckoutSessionId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "stripePaymentIntentId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "subtotalCents": {
                 "nullable": false,
                 "type": {
@@ -231,6 +270,13 @@
                 "nullable": false,
                 "type": {
                   "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "trackingNumber": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
@@ -276,11 +322,17 @@
             },
             "storage": {
               "fields": {
+                "carrier": {
+                  "column": "carrier"
+                },
                 "createdAt": {
                   "column": "createdAt"
                 },
                 "customerId": {
                   "column": "customerId"
+                },
+                "deliveredAt": {
+                  "column": "deliveredAt"
                 },
                 "id": {
                   "column": "id"
@@ -288,17 +340,29 @@
                 "paymentStatus": {
                   "column": "paymentStatus"
                 },
+                "shippedAt": {
+                  "column": "shippedAt"
+                },
                 "status": {
                   "column": "status"
                 },
                 "statusReason": {
                   "column": "statusReason"
                 },
+                "stripeCheckoutSessionId": {
+                  "column": "stripeCheckoutSessionId"
+                },
+                "stripePaymentIntentId": {
+                  "column": "stripePaymentIntentId"
+                },
                 "subtotalCents": {
                   "column": "subtotalCents"
                 },
                 "totalCents": {
                   "column": "totalCents"
+                },
+                "trackingNumber": {
+                  "column": "trackingNumber"
                 },
                 "updatedAt": {
                   "column": "updatedAt"
@@ -437,6 +501,13 @@
                   "kind": "scalar"
                 }
               },
+              "lowStockThreshold": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
               "name": {
                 "nullable": false,
                 "type": {
@@ -507,6 +578,9 @@
                 "imageUrl": {
                   "column": "imageUrl"
                 },
+                "lowStockThreshold": {
+                  "column": "lowStockThreshold"
+                },
                 "name": {
                   "column": "name"
                 },
@@ -525,6 +599,47 @@
               },
               "namespaceId": "public",
               "table": "product"
+            }
+          },
+          "StripeEvent": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "type": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {},
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "type": {
+                  "column": "type"
+                }
+              },
+              "namespaceId": "public",
+              "table": "stripeEvent"
             }
           }
         }
@@ -606,6 +721,11 @@
                 }
               ],
               "columns": {
+                "carrier": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "createdAt": {
                   "codecId": "pg/timestamptz-string@1",
                   "default": {
@@ -619,6 +739,11 @@
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": false
+                },
+                "deliveredAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
                 },
                 "id": {
                   "codecId": "pg/text@1",
@@ -644,6 +769,11 @@
                     "plane": "storage"
                   }
                 },
+                "shippedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
                 "status": {
                   "codecId": "pg/text@1",
                   "default": {
@@ -664,6 +794,16 @@
                   "nativeType": "text",
                   "nullable": true
                 },
+                "stripeCheckoutSessionId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "stripePaymentIntentId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "subtotalCents": {
                   "codecId": "pg/int4@1",
                   "nativeType": "int4",
@@ -673,6 +813,11 @@
                   "codecId": "pg/int4@1",
                   "nativeType": "int4",
                   "nullable": false
+                },
+                "trackingNumber": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
                 },
                 "updatedAt": {
                   "codecId": "pg/timestamptz-string@1",
@@ -713,7 +858,13 @@
                   "id"
                 ]
               },
-              "uniques": []
+              "uniques": [
+                {
+                  "columns": [
+                    "stripeCheckoutSessionId"
+                  ]
+                }
+              ]
             },
             "orderItem": {
               "columns": {
@@ -841,6 +992,15 @@
                   "nativeType": "text",
                   "nullable": true
                 },
+                "lowStockThreshold": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 5
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
                 "name": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -890,6 +1050,37 @@
                   ]
                 }
               ]
+            },
+            "stripeEvent": {
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "type": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
             }
           },
           "valueSet": {
@@ -919,7 +1110,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "e5c26d17d80537a39d87d1e9e82e0873ec3dee4dd1b6f4d131b8545de52718fb"
+    "storageHash": "126a25cdbf222f3072177c99f271d258b71d5442c504bb6e4b3ed19ecac3dbd2"
   },
   "execution": {
     "executionHash": "502ee69058531a1a702aca8927ecd748bff4b8e9fbbb4fbdeec563f5414965fd",

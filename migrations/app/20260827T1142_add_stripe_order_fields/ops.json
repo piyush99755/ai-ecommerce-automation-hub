@@ -1,0 +1,128 @@
+[
+  {
+    "id": "column.public.order.stripeCheckoutSessionId",
+    "label": "Add column \"stripeCheckoutSessionId\" to \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "stripeCheckoutSessionId",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"stripeCheckoutSessionId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "stripeCheckoutSessionId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"stripeCheckoutSessionId\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD COLUMN \"stripeCheckoutSessionId\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"stripeCheckoutSessionId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "stripeCheckoutSessionId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.order.stripePaymentIntentId",
+    "label": "Add column \"stripePaymentIntentId\" to \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "stripePaymentIntentId",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"stripePaymentIntentId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "stripePaymentIntentId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"stripePaymentIntentId\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD COLUMN \"stripePaymentIntentId\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"stripePaymentIntentId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "stripePaymentIntentId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.order.order_stripeCheckoutSessionId_key",
+    "label": "Add unique constraint on \"order\" (stripeCheckoutSessionId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "order_stripeCheckoutSessionId_key",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"order_stripeCheckoutSessionId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "order_stripeCheckoutSessionId_key",
+          "public",
+          "\"public\".\"order\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"order_stripeCheckoutSessionId_key\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD CONSTRAINT \"order_stripeCheckoutSessionId_key\" UNIQUE (\"stripeCheckoutSessionId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"order_stripeCheckoutSessionId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "order_stripeCheckoutSessionId_key",
+          "public",
+          "\"public\".\"order\""
+        ]
+      }
+    ]
+  }
+]

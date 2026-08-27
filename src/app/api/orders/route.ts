@@ -1,6 +1,5 @@
 import { db } from '@/prisma/db';
 import { NextResponse } from 'next/server';
-import { sendOrderCreatedEvent } from '@/lib/n8n';
 
 interface OrderItemInput {
   productId: string;
@@ -155,15 +154,8 @@ export async function POST(request: Request) {
       return newOrder;
     });
 
-    // Post-Transaction Event Dispatch (Best-effort n8n Webhook Trigger)
-    await sendOrderCreatedEvent({
-      event: 'ORDER_CREATED',
-      orderId: result.id,
-      customerId: result.customerId,
-      totalCents: result.totalCents,
-      status: result.status,
-      paymentStatus: result.paymentStatus,
-    });
+    // Note: n8n fulfillment event is NOT dispatched on order creation anymore.
+    // It is triggered from verified Stripe payment webhook when paymentStatus becomes PAID.
 
     return NextResponse.json(
       {
