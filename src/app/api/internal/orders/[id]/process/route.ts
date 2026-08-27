@@ -1,6 +1,7 @@
 import { db } from '@/prisma/db';
 import { NextResponse } from 'next/server';
 import { authenticateAutomationSecret } from '@/lib/auth';
+import { sendOrderProcessingEmail } from '@/lib/email';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -32,10 +33,11 @@ export async function POST(request: Request, { params }: RouteContext) {
         return {
           statusCode: 404,
           payload: { error: 'Order not found' },
+          customerEmail: null,
         };
       }
 
-      // b. Idempotency Check: If already PROCESSING, return success without mutating stock
+      // b. Idempotency Check: If already PROCESSING, return success without mutating stock or re-sending email
       if (order.status === 'PROCESSING') {
         return {
           statusCode: 200,
@@ -46,6 +48,7 @@ export async function POST(request: Request, { params }: RouteContext) {
             alreadyProcessing: true,
             inventoryUpdated: false,
           },
+          customerEmail: null,
         };
       }
 
@@ -58,11 +61,13 @@ export async function POST(request: Request, { params }: RouteContext) {
             error: 'INVALID_TRANSITION',
             message: `Order is currently in "${order.status}" status and cannot transition to PROCESSING.`,
           },
+          customerEmail: null,
         };
       }
 
-      // d. Fetch OrderItems and authoritative Product rows
+      // d. Fetch OrderItems, Customer, and authoritative Product rows
       const orderItems = await tx.orm.public.OrderItem.where({ orderId: order.id }).all();
+      const customer = await tx.orm.public.Customer.where({ id: order.customerId }).first();
       const allProducts = await tx.orm.public.Product.all();
       const productMap = new Map(allProducts.map((p) => [p.id, p]));
 
@@ -93,6 +98,7 @@ export async function POST(request: Request, { params }: RouteContext) {
             error: 'INSUFFICIENT_STOCK',
             items: insufficientItems,
           },
+          customerEmail: null,
         };
       }
 
@@ -119,8 +125,26 @@ export async function POST(request: Request, { params }: RouteContext) {
           status: 'PROCESSING',
           inventoryUpdated: true,
         },
+        customerEmail: customer ? customer.email : null,
       };
     });
+
+    // 4. Post-Transaction Email Notification (Best-effort delivery)
+    if (
+      transactionResult.statusCode === 200 &&
+      transactionResult.payload.inventoryUpdated === true &&
+      transactionResult.customerEmail
+    ) {
+      try {
+        await sendOrderProcessingEmail({
+          orderId: transactionResult.payload.orderId,
+          customerEmail: transactionResult.customerEmail,
+          status: 'PROCESSING',
+        });
+      } catch (emailErr) {
+        console.warn('[internal-api] Non-fatal failure sending customer order-processing email:', emailErr);
+      }
+    }
 
     return NextResponse.json(transactionResult.payload, { status: transactionResult.statusCode });
   } catch (error) {
