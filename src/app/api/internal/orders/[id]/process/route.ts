@@ -2,6 +2,7 @@ import { db } from '@/prisma/db';
 import { NextResponse } from 'next/server';
 import { authenticateAutomationSecret } from '@/lib/auth';
 import { sendOrderProcessingEmail } from '@/lib/email';
+import { sendInventoryUpdatedEvent } from '@/lib/n8n';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -34,6 +35,7 @@ export async function POST(request: Request, { params }: RouteContext) {
           statusCode: 404,
           payload: { error: 'Order not found' },
           customerEmail: null,
+          productIds: [],
         };
       }
 
@@ -49,10 +51,25 @@ export async function POST(request: Request, { params }: RouteContext) {
             inventoryUpdated: false,
           },
           customerEmail: null,
+          productIds: [],
         };
       }
 
-      // c. Reject invalid lifecycle transitions (SHIPPED, DELIVERED, CANCELLED, ON_HOLD)
+      // c. Payment Gate: Reject fulfillment if paymentStatus is not PAID
+      if (order.paymentStatus !== 'PAID') {
+        return {
+          statusCode: 409,
+          payload: {
+            success: false,
+            error: 'PAYMENT_REQUIRED',
+            message: `Order payment has not been confirmed. Current paymentStatus is "${order.paymentStatus}".`,
+          },
+          customerEmail: null,
+          productIds: [],
+        };
+      }
+
+      // d. Reject invalid lifecycle transitions (SHIPPED, DELIVERED, CANCELLED, ON_HOLD)
       if (order.status !== 'PENDING') {
         return {
           statusCode: 409,
@@ -62,16 +79,17 @@ export async function POST(request: Request, { params }: RouteContext) {
             message: `Order is currently in "${order.status}" status and cannot transition to PROCESSING.`,
           },
           customerEmail: null,
+          productIds: [],
         };
       }
 
-      // d. Fetch OrderItems, Customer, and authoritative Product rows
+      // e. Fetch OrderItems, Customer, and authoritative Product rows
       const orderItems = await tx.orm.public.OrderItem.where({ orderId: order.id }).all();
       const customer = await tx.orm.public.Customer.where({ id: order.customerId }).first();
       const allProducts = await tx.orm.public.Product.all();
       const productMap = new Map(allProducts.map((p) => [p.id, p]));
 
-      // e. Verify stock availability for all items before any mutation
+      // f. Verify stock availability for all items before any mutation
       const insufficientItems: {
         productId: string;
         requestedQuantity: number;
@@ -99,19 +117,22 @@ export async function POST(request: Request, { params }: RouteContext) {
             items: insufficientItems,
           },
           customerEmail: null,
+          productIds: [],
         };
       }
 
-      // f. Atomically Decrement Stock for every Product
+      // g. Atomically Decrement Stock for every Product
+      const updatedProductIds: string[] = [];
       for (const item of orderItems) {
         const product = productMap.get(item.productId)!;
         const newStock = product.stock - item.quantity;
         await tx.orm.public.Product.where({ id: product.id }).update({
           stock: newStock,
         });
+        updatedProductIds.push(product.id);
       }
 
-      // g. Atomically Update Order Status to PROCESSING and clear statusReason
+      // h. Atomically Update Order Status to PROCESSING and clear statusReason
       await tx.orm.public.Order.where({ id: order.id }).update({
         status: 'PROCESSING',
         statusReason: null,
@@ -126,10 +147,11 @@ export async function POST(request: Request, { params }: RouteContext) {
           inventoryUpdated: true,
         },
         customerEmail: customer ? customer.email : null,
+        productIds: updatedProductIds,
       };
     });
 
-    // 4. Post-Transaction Email Notification (Best-effort delivery)
+    // 4. Post-Transaction Customer Email Notification (Best-effort delivery)
     if (
       transactionResult.statusCode === 200 &&
       transactionResult.payload.inventoryUpdated === true &&
@@ -143,6 +165,24 @@ export async function POST(request: Request, { params }: RouteContext) {
         });
       } catch (emailErr) {
         console.warn('[internal-api] Non-fatal failure sending customer order-processing email:', emailErr);
+      }
+    }
+
+    // 5. Post-Transaction Inventory Event Dispatch to n8n (Best-effort delivery)
+    if (
+      transactionResult.statusCode === 200 &&
+      transactionResult.payload.inventoryUpdated === true &&
+      transactionResult.productIds &&
+      transactionResult.productIds.length > 0
+    ) {
+      try {
+        await sendInventoryUpdatedEvent({
+          event: 'INVENTORY_UPDATED',
+          orderId: transactionResult.payload.orderId,
+          productIds: transactionResult.productIds,
+        });
+      } catch (n8nErr) {
+        console.warn('[internal-api] Non-fatal failure sending INVENTORY_UPDATED event to n8n:', n8nErr);
       }
     }
 
