@@ -21,86 +21,110 @@ export async function POST(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
     }
 
-    // 3. Load Order from PostgreSQL
-    const order = await db.orm.public.Order.where({ id: id.trim() }).first();
+    const cleanId = id.trim();
 
-    if (!order) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
-    }
+    // 3. Execute Atomic Database Transaction
+    const transactionResult = await db.transaction(async (tx) => {
+      // a. Load Order
+      const order = await tx.orm.public.Order.where({ id: cleanId }).first();
 
-    // 4. Check Idempotency: If already PROCESSING, return success idempotently
-    if (order.status === 'PROCESSING') {
-      return NextResponse.json(
-        {
+      if (!order) {
+        return {
+          statusCode: 404,
+          payload: { error: 'Order not found' },
+        };
+      }
+
+      // b. Idempotency Check: If already PROCESSING, return success without mutating stock
+      if (order.status === 'PROCESSING') {
+        return {
+          statusCode: 200,
+          payload: {
+            success: true,
+            orderId: order.id,
+            status: 'PROCESSING',
+            alreadyProcessing: true,
+            inventoryUpdated: false,
+          },
+        };
+      }
+
+      // c. Reject invalid lifecycle transitions (SHIPPED, DELIVERED, CANCELLED, ON_HOLD)
+      if (order.status !== 'PENDING') {
+        return {
+          statusCode: 409,
+          payload: {
+            success: false,
+            error: 'INVALID_TRANSITION',
+            message: `Order is currently in "${order.status}" status and cannot transition to PROCESSING.`,
+          },
+        };
+      }
+
+      // d. Fetch OrderItems and authoritative Product rows
+      const orderItems = await tx.orm.public.OrderItem.where({ orderId: order.id }).all();
+      const allProducts = await tx.orm.public.Product.all();
+      const productMap = new Map(allProducts.map((p) => [p.id, p]));
+
+      // e. Verify stock availability for all items before any mutation
+      const insufficientItems: {
+        productId: string;
+        requestedQuantity: number;
+        currentStock: number;
+      }[] = [];
+
+      for (const item of orderItems) {
+        const product = productMap.get(item.productId);
+        const currentStock = product ? product.stock : 0;
+        if (currentStock < item.quantity) {
+          insufficientItems.push({
+            productId: item.productId,
+            requestedQuantity: item.quantity,
+            currentStock,
+          });
+        }
+      }
+
+      if (insufficientItems.length > 0) {
+        return {
+          statusCode: 409,
+          payload: {
+            success: false,
+            error: 'INSUFFICIENT_STOCK',
+            items: insufficientItems,
+          },
+        };
+      }
+
+      // f. Atomically Decrement Stock for every Product
+      for (const item of orderItems) {
+        const product = productMap.get(item.productId)!;
+        const newStock = product.stock - item.quantity;
+        await tx.orm.public.Product.where({ id: product.id }).update({
+          stock: newStock,
+        });
+      }
+
+      // g. Atomically Update Order Status to PROCESSING and clear statusReason
+      await tx.orm.public.Order.where({ id: order.id }).update({
+        status: 'PROCESSING',
+        statusReason: null,
+      });
+
+      return {
+        statusCode: 200,
+        payload: {
           success: true,
           orderId: order.id,
           status: 'PROCESSING',
-          alreadyProcessing: true,
+          inventoryUpdated: true,
         },
-        { status: 200 }
-      );
-    }
-
-    // 5. Reject invalid lifecycle transitions (SHIPPED, DELIVERED, CANCELLED)
-    if (order.status !== 'PENDING') {
-      return NextResponse.json(
-        {
-          error: 'INVALID_TRANSITION',
-          message: `Order is currently in "${order.status}" status and cannot transition to PROCESSING.`,
-        },
-        { status: 409 }
-      );
-    }
-
-    // 6. Re-check Inventory server-side
-    const orderItems = await db.orm.public.OrderItem.where({ orderId: order.id }).all();
-    const allProducts = await db.orm.public.Product.all();
-    const productMap = new Map(allProducts.map((p) => [p.id, p]));
-
-    const insufficientItems: {
-      productId: string;
-      requestedQuantity: number;
-      currentStock: number;
-    }[] = [];
-
-    for (const item of orderItems) {
-      const product = productMap.get(item.productId);
-      const currentStock = product ? product.stock : 0;
-      if (currentStock < item.quantity) {
-        insufficientItems.push({
-          productId: item.productId,
-          requestedQuantity: item.quantity,
-          currentStock,
-        });
-      }
-    }
-
-    if (insufficientItems.length > 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'INSUFFICIENT_STOCK',
-          items: insufficientItems,
-        },
-        { status: 409 }
-      );
-    }
-
-    // 7. Update status: PENDING -> PROCESSING
-    await db.orm.public.Order.where({ id: order.id }).update({
-      status: 'PROCESSING',
+      };
     });
 
-    return NextResponse.json(
-      {
-        success: true,
-        orderId: order.id,
-        status: 'PROCESSING',
-      },
-      { status: 200 }
-    );
+    return NextResponse.json(transactionResult.payload, { status: transactionResult.statusCode });
   } catch (error) {
-    console.error('[internal-api] Unexpected error processing order transition:', error);
+    console.error('[internal-api] Unexpected error processing atomic order transition:', error);
     return NextResponse.json(
       { error: 'An unexpected internal error occurred.' },
       { status: 500 }
