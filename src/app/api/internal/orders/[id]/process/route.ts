@@ -2,7 +2,6 @@ import { db } from '@/prisma/db';
 import { NextResponse } from 'next/server';
 import { authenticateAutomationSecret } from '@/lib/auth';
 import { sendOrderProcessingEmail } from '@/lib/email';
-import { sendInventoryUpdatedEvent } from '@/lib/n8n';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -138,6 +137,19 @@ export async function POST(request: Request, { params }: RouteContext) {
         statusReason: null,
       });
 
+      // i. Create INVENTORY_UPDATED OutboxEvent atomically inside the SAME transaction
+      await tx.orm.public.OutboxEvent.create({
+        eventType: 'INVENTORY_UPDATED',
+        aggregateType: 'Order',
+        aggregateId: order.id,
+        payload: JSON.stringify({
+          event: 'INVENTORY_UPDATED',
+          orderId: order.id,
+          productIds: updatedProductIds,
+        }),
+        status: 'PENDING',
+      });
+
       return {
         statusCode: 200,
         payload: {
@@ -165,24 +177,6 @@ export async function POST(request: Request, { params }: RouteContext) {
         });
       } catch (emailErr) {
         console.warn('[internal-api] Non-fatal failure sending customer order-processing email:', emailErr);
-      }
-    }
-
-    // 5. Post-Transaction Inventory Event Dispatch to n8n (Best-effort delivery)
-    if (
-      transactionResult.statusCode === 200 &&
-      transactionResult.payload.inventoryUpdated === true &&
-      transactionResult.productIds &&
-      transactionResult.productIds.length > 0
-    ) {
-      try {
-        await sendInventoryUpdatedEvent({
-          event: 'INVENTORY_UPDATED',
-          orderId: transactionResult.payload.orderId,
-          productIds: transactionResult.productIds,
-        });
-      } catch (n8nErr) {
-        console.warn('[internal-api] Non-fatal failure sending INVENTORY_UPDATED event to n8n:', n8nErr);
       }
     }
 

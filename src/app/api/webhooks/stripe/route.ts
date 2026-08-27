@@ -2,7 +2,6 @@ import { db } from '@/prisma/db';
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { getStripeClient } from '@/lib/stripe';
-import { sendPaymentSucceededEvent } from '@/lib/n8n';
 
 export async function POST(request: Request) {
   try {
@@ -31,7 +30,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Process event inside a single atomic database transaction with StripeEvent deduplication
+    // Process event inside a single atomic database transaction with StripeEvent deduplication & Outbox creation
     const result = await db.transaction(async (tx) => {
       // 1. Concurrency-Safe Deduplication: Check if event.id was already processed
       const existingEvent = await tx.orm.public.StripeEvent.where({ id: event.id }).first();
@@ -39,7 +38,6 @@ export async function POST(request: Request) {
         return {
           statusCode: 200,
           payload: { received: true, alreadyProcessed: true },
-          shouldEmitN8n: false,
         };
       }
 
@@ -50,12 +48,10 @@ export async function POST(request: Request) {
           type: event.type,
         });
       } catch (insertErr: unknown) {
-        // Primary key constraint violation during concurrent duplicate delivery
         console.log(`[stripe-webhook] Concurrent duplicate event ${event.id} caught at database constraint boundary:`, insertErr);
         return {
           statusCode: 200,
           payload: { received: true, alreadyProcessed: true },
-          shouldEmitN8n: false,
         };
       }
 
@@ -73,7 +69,6 @@ export async function POST(request: Request) {
             return {
               statusCode: 200,
               payload: { received: true, warning: 'Missing orderId in metadata' },
-              shouldEmitN8n: false,
             };
           }
 
@@ -83,17 +78,15 @@ export async function POST(request: Request) {
             return {
               statusCode: 200,
               payload: { received: true, warning: 'Order not found' },
-              shouldEmitN8n: false,
             };
           }
 
-          // Idempotency Check: Skip duplicate payment mutations if order is already PAID (e.g. via different event ID)
+          // Idempotency Check: Skip duplicate payment mutations if order is already PAID
           if (order.paymentStatus === 'PAID') {
             console.log(`[stripe-webhook] Order ${order.id} is already PAID. Skipping duplicate processing.`);
             return {
               statusCode: 200,
               payload: { received: true, alreadyPaid: true },
-              shouldEmitN8n: false,
             };
           }
 
@@ -106,14 +99,25 @@ export async function POST(request: Request) {
             stripeCheckoutSessionId: session.id || order.stripeCheckoutSessionId,
           });
 
-          console.log(`[stripe-webhook] Order ${order.id} updated to paymentStatus = PAID`);
+          // Create OutboxEvent atomically inside the SAME database transaction
+          await tx.orm.public.OutboxEvent.create({
+            eventType: 'PAYMENT_SUCCEEDED',
+            aggregateType: 'Order',
+            aggregateId: order.id,
+            payload: JSON.stringify({
+              event: 'PAYMENT_SUCCEEDED',
+              orderId: order.id,
+              customerId: order.customerId,
+              paymentStatus: 'PAID',
+            }),
+            status: 'PENDING',
+          });
+
+          console.log(`[stripe-webhook] Order ${order.id} updated to paymentStatus = PAID and PAYMENT_SUCCEEDED OutboxEvent created.`);
 
           return {
             statusCode: 200,
             payload: { received: true },
-            shouldEmitN8n: true,
-            orderId: order.id,
-            customerId: order.customerId,
           };
         }
       } else if (event.type === 'checkout.session.async_payment_failed') {
@@ -133,30 +137,14 @@ export async function POST(request: Request) {
         return {
           statusCode: 200,
           payload: { received: true, paymentFailedRecorded: true },
-          shouldEmitN8n: false,
         };
       }
 
       return {
         statusCode: 200,
         payload: { received: true },
-        shouldEmitN8n: false,
       };
     });
-
-    // 4. Post-Commit Best-Effort Event Dispatch to n8n (only when transition succeeded)
-    if (result.shouldEmitN8n && result.orderId && result.customerId) {
-      try {
-        await sendPaymentSucceededEvent({
-          event: 'PAYMENT_SUCCEEDED',
-          orderId: result.orderId,
-          customerId: result.customerId,
-          paymentStatus: 'PAID',
-        });
-      } catch (n8nErr) {
-        console.warn('[stripe-webhook] Non-fatal error sending PAYMENT_SUCCEEDED event to n8n:', n8nErr);
-      }
-    }
 
     return NextResponse.json(result.payload, { status: result.statusCode });
   } catch (error: unknown) {

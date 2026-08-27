@@ -2,7 +2,6 @@ import { db } from '@/prisma/db';
 import { NextResponse } from 'next/server';
 import { authenticateAutomationSecret } from '@/lib/auth';
 import { sendOrderShippedEmail, sendOrderDeliveredEmail } from '@/lib/email';
-import { sendOrderStatusUpdatedEvent } from '@/lib/n8n';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -55,7 +54,6 @@ export async function POST(request: Request, { params }: RouteContext) {
           statusCode: 404,
           payload: { error: 'Order not found' },
           shouldSendEmail: false,
-          shouldEmitN8n: false,
           customerEmail: null,
         };
       }
@@ -70,7 +68,6 @@ export async function POST(request: Request, { params }: RouteContext) {
             message: `Unpaid orders cannot be transitioned to ${targetStatus}. Current paymentStatus is "${order.paymentStatus}".`,
           },
           shouldSendEmail: false,
-          shouldEmitN8n: false,
           customerEmail: null,
         };
       }
@@ -86,7 +83,6 @@ export async function POST(request: Request, { params }: RouteContext) {
             alreadyShipped: true,
           },
           shouldSendEmail: false,
-          shouldEmitN8n: false,
           customerEmail: null,
         };
       }
@@ -101,7 +97,6 @@ export async function POST(request: Request, { params }: RouteContext) {
             alreadyDelivered: true,
           },
           shouldSendEmail: false,
-          shouldEmitN8n: false,
           customerEmail: null,
         };
       }
@@ -117,7 +112,6 @@ export async function POST(request: Request, { params }: RouteContext) {
               message: `Order is in "${order.status}" status and cannot transition to SHIPPED. Must be in PROCESSING status.`,
             },
             shouldSendEmail: false,
-            shouldEmitN8n: false,
             customerEmail: null,
           };
         }
@@ -131,13 +125,12 @@ export async function POST(request: Request, { params }: RouteContext) {
               message: `Order is in "${order.status}" status and cannot transition to DELIVERED. Must be in SHIPPED status.`,
             },
             shouldSendEmail: false,
-            shouldEmitN8n: false,
             customerEmail: null,
           };
         }
       }
 
-      // e. Perform State Mutation
+      // e. Perform State Mutation & Create Outbox Event
       const customer = await tx.orm.public.Customer.where({ id: order.customerId }).first();
       const now = new Date().toISOString();
 
@@ -155,6 +148,21 @@ export async function POST(request: Request, { params }: RouteContext) {
         });
       }
 
+      // Create ORDER_STATUS_UPDATED OutboxEvent atomically inside the SAME transaction
+      await tx.orm.public.OutboxEvent.create({
+        eventType: 'ORDER_STATUS_UPDATED',
+        aggregateType: 'Order',
+        aggregateId: order.id,
+        payload: JSON.stringify({
+          event: 'ORDER_STATUS_UPDATED',
+          orderId: order.id,
+          status: targetStatus,
+          carrier: carrier || order.carrier,
+          trackingNumber: trackingNumber || order.trackingNumber,
+        }),
+        status: 'PENDING',
+      });
+
       return {
         statusCode: 200,
         payload: {
@@ -165,7 +173,6 @@ export async function POST(request: Request, { params }: RouteContext) {
           trackingNumber: trackingNumber || order.trackingNumber,
         },
         shouldSendEmail: true,
-        shouldEmitN8n: true,
         targetStatus,
         customerEmail: customer ? customer.email : null,
         carrier: carrier || order.carrier,
@@ -191,21 +198,6 @@ export async function POST(request: Request, { params }: RouteContext) {
         }
       } catch (emailErr) {
         console.warn('[internal-api] Non-fatal failure sending order status email:', emailErr);
-      }
-    }
-
-    // 6. Post-Commit n8n Event Dispatch (Best-effort delivery)
-    if (transactionResult.shouldEmitN8n && transactionResult.targetStatus) {
-      try {
-        await sendOrderStatusUpdatedEvent({
-          event: 'ORDER_STATUS_UPDATED',
-          orderId: transactionResult.payload.orderId,
-          status: transactionResult.targetStatus as 'SHIPPED' | 'DELIVERED',
-          carrier: transactionResult.carrier,
-          trackingNumber: transactionResult.trackingNumber,
-        });
-      } catch (n8nErr) {
-        console.warn('[internal-api] Non-fatal failure sending ORDER_STATUS_UPDATED event to n8n:', n8nErr);
       }
     }
 

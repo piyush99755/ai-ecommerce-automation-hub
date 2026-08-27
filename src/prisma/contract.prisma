@@ -16,6 +16,13 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  DELIVERED
+  FAILED
+}
+
 model Product {
   id                String            @id @default(dbgenerated("gen_random_uuid()"))
   name              String
@@ -77,4 +84,22 @@ model StripeEvent {
   id        String            @id
   type      String
   createdAt TimestamptzString @default(now())
+}
+
+model OutboxEvent {
+  id            String            @id @default(dbgenerated("gen_random_uuid()"))
+  eventType     String
+  aggregateType String
+  aggregateId   String
+  payload       Json
+  status        OutboxStatus      @default(PENDING)
+  attemptCount  Int               @default(0)
+  nextAttemptAt TimestamptzString?
+  lastAttemptAt TimestamptzString?
+  deliveredAt   TimestamptzString?
+  lastError     String?
+  createdAt     TimestamptzString @default(now())
+
+  @@index([status, nextAttemptAt])
+  @@index([aggregateType, aggregateId])
 }
