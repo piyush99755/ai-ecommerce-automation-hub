@@ -37,6 +37,10 @@
                 "value": "PROCESSING"
               },
               {
+                "name": "ON_HOLD",
+                "value": "ON_HOLD"
+              },
+              {
                 "name": "SHIPPED",
                 "value": "SHIPPED"
               },
@@ -209,6 +213,13 @@
                   "plane": "domain"
                 }
               },
+              "statusReason": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "subtotalCents": {
                 "nullable": false,
                 "type": {
@@ -279,6 +290,9 @@
                 },
                 "status": {
                   "column": "status"
+                },
+                "statusReason": {
+                  "column": "statusReason"
                 },
                 "subtotalCents": {
                   "column": "subtotalCents"
@@ -586,8 +600,8 @@
                   "prefix": "order_paymentStatus_check"
                 },
                 {
-                  "expression": "\"status\" IN ('PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED')",
-                  "name": "order_status_check_d570e490",
+                  "expression": "\"status\" IN ('PENDING', 'PROCESSING', 'ON_HOLD', 'SHIPPED', 'DELIVERED', 'CANCELLED')",
+                  "name": "order_status_check_50337988",
                   "prefix": "order_status_check"
                 }
               ],
@@ -644,6 +658,11 @@
                     "namespaceId": "public",
                     "plane": "storage"
                   }
+                },
+                "statusReason": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
                 },
                 "subtotalCents": {
                   "codecId": "pg/int4@1",
@@ -879,6 +898,7 @@
               "values": [
                 "PENDING",
                 "PROCESSING",
+                "ON_HOLD",
                 "SHIPPED",
                 "DELIVERED",
                 "CANCELLED"
@@ -899,7 +919,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "63f66fddb2301bcc26356ef5c1cdcb59707f93815118eb94745ebfd6e755024f"
+    "storageHash": "e5c26d17d80537a39d87d1e9e82e0873ec3dee4dd1b6f4d131b8545de52718fb"
   },
   "execution": {
     "executionHash": "502ee69058531a1a702aca8927ecd748bff4b8e9fbbb4fbdeec563f5414965fd",

@@ -52,6 +52,7 @@ export async function GET(request: Request, { params }: RouteContext) {
         orderId: order.id,
         customerId: order.customerId,
         status: order.status,
+        statusReason: order.statusReason || null,
         paymentStatus: order.paymentStatus,
         subtotalCents: order.subtotalCents,
         totalCents: order.totalCents,
