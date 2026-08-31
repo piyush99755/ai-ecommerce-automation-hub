@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
@@ -22,6 +22,9 @@ export default function CheckoutPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Synchronous ref lock to prevent same-tick duplicate submissions
+  const isSubmittingRef = useRef(false);
 
   if (!isHydrated) {
     return (
@@ -52,6 +55,10 @@ export default function CheckoutPage() {
 
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Guard against same-tick duplicate submissions using synchronous ref lock
+    if (isSubmittingRef.current || submitting) return;
+
     setErrorMessage(null);
 
     if (!name.trim()) {
@@ -64,9 +71,11 @@ export default function CheckoutPage() {
       return;
     }
 
+    isSubmittingRef.current = true;
     setSubmitting(true);
 
     try {
+      // Step 1: Create Order in database (paymentStatus = PENDING)
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: {
@@ -91,16 +100,38 @@ export default function CheckoutPage() {
         throw new Error(data.error || 'Failed to place order');
       }
 
-      // Success: clear cart and redirect to order confirmation page
+      // Step 2: Request Stripe Checkout Session for the created Order
+      let checkoutUrl: string | null = null;
+      try {
+        const sessionRes = await fetch(`/api/orders/${data.orderId}/checkout-session`, {
+          method: 'POST',
+        });
+        const sessionData = await sessionRes.json();
+        if (sessionRes.ok && sessionData.url) {
+          checkoutUrl = sessionData.url;
+        } else {
+          console.warn('[checkout] Checkout Session API error:', sessionData);
+        }
+      } catch (sessionErr) {
+        console.warn('[checkout] Failed to create Stripe Checkout Session:', sessionErr);
+      }
+
+      // Step 3: Clear shopping cart
       clearCart();
-      router.push(`/orders/${data.orderId}`);
+
+      // Step 4: Redirect browser to Stripe Checkout URL (or fallback order page)
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+      } else {
+        router.push(`/orders/${data.orderId}`);
+      }
     } catch (err: unknown) {
       if (err instanceof Error) {
         setErrorMessage(err.message);
       } else {
         setErrorMessage('An unexpected error occurred. Please try again.');
       }
-    } finally {
+      isSubmittingRef.current = false;
       setSubmitting(false);
     }
   };
@@ -178,9 +209,9 @@ export default function CheckoutPage() {
               </div>
 
               <div className="pt-4 border-t border-gray-100 mt-6">
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800 mb-4">
-                  <span className="font-semibold block mb-0.5">Demo Checkout Notice:</span>
-                  Payment status will be marked as <span className="font-bold">Pending</span>. No credit card required.
+                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 text-xs text-indigo-800 mb-4">
+                  <span className="font-semibold block mb-0.5">Secure Stripe Checkout:</span>
+                  You will be automatically redirected to Stripe to complete your payment.
                 </div>
 
                 <button
@@ -188,7 +219,7 @@ export default function CheckoutPage() {
                   disabled={submitting}
                   className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
-                  {submitting ? 'Processing Order...' : 'Place Order →'}
+                  {submitting ? 'Redirecting to Stripe Checkout...' : 'Proceed to Payment →'}
                 </button>
               </div>
             </form>

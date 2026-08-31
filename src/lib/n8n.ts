@@ -9,6 +9,7 @@ export interface InventoryUpdatedEventPayload {
   event: 'INVENTORY_UPDATED';
   orderId: string;
   productIds: string[];
+  lowStockTransitions?: string[];
 }
 
 export interface OrderStatusUpdatedEventPayload {

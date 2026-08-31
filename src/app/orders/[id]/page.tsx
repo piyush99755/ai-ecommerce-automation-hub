@@ -1,6 +1,7 @@
 import { db } from '@/prisma/db';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { PayOrderButton } from '@/components/orders/PayOrderButton';
 
 export const revalidate = 0;
 
@@ -30,23 +31,48 @@ export default async function OrderConfirmationPage({ params }: OrderConfirmatio
   const allProducts = await db.orm.public.Product.all();
   const productMap = new Map(allProducts.map((p) => [p.id, p]));
 
+  const isPaymentPending = order.paymentStatus !== 'PAID' && order.status !== 'CANCELLED';
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
           <div className="text-center pb-6 border-b border-gray-100">
-            <div className="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-              ✓
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold ${
+              order.paymentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+            }`}>
+              {order.paymentStatus === 'PAID' ? '✓' : '!'}
             </div>
-            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Order Received</h1>
+            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+              {order.paymentStatus === 'PAID' ? 'Order Confirmed' : 'Order Placed (Payment Pending)'}
+            </h1>
             <p className="mt-2 text-sm text-gray-600">
-              Thank you! Your order has been created in Neon PostgreSQL.
+              {order.paymentStatus === 'PAID'
+                ? 'Thank you! Your payment has been verified by Stripe.'
+                : 'Your order is recorded in PostgreSQL. Complete payment below to begin fulfillment.'}
             </p>
             <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-xs font-mono text-gray-700">
               <span>Order ID:</span>
               <span className="font-bold text-gray-900">{order.id}</span>
             </div>
           </div>
+
+          {/* Payment Action Banner for Pending Orders */}
+          {isPaymentPending && (
+            <div className="my-6 p-6 bg-amber-50 border border-amber-200 rx-12 rounded-2xl">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-base font-bold text-amber-900">Payment Required for Fulfillment</h3>
+                  <p className="text-xs text-amber-700 mt-1">
+                    Fulfillment and inventory allocation start after Stripe confirms payment.
+                  </p>
+                </div>
+                <div className="w-full sm:w-auto min-w-[220px]">
+                  <PayOrderButton orderId={order.id} />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Status Indicators */}
           <div className="grid grid-cols-2 gap-4 py-6 border-b border-gray-100 text-center">
@@ -63,7 +89,9 @@ export default async function OrderConfirmationPage({ params }: OrderConfirmatio
               <span className="text-xs text-gray-400 uppercase tracking-wider font-semibold block mb-1">
                 Payment Status
               </span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                order.paymentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+              }`}>
                 {order.paymentStatus}
               </span>
             </div>

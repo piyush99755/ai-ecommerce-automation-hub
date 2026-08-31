@@ -120,11 +120,24 @@ export async function POST(request: Request, { params }: RouteContext) {
         };
       }
 
-      // g. Atomically Decrement Stock for every Product
+      // g. Atomically Decrement Stock & Detect Low-Stock Threshold Transitions
       const updatedProductIds: string[] = [];
+      const lowStockTransitions: string[] = [];
+
       for (const item of orderItems) {
         const product = productMap.get(item.productId)!;
-        const newStock = product.stock - item.quantity;
+        const prevStock = product.stock;
+        const newStock = prevStock - item.quantity;
+        const threshold = product.lowStockThreshold ?? 5;
+
+        // Threshold transition detection: Alert eligible ONLY when crossing into LOW_STOCK
+        const wasAboveThreshold = prevStock > threshold;
+        const isNowAtOrBelowThreshold = newStock <= threshold;
+
+        if (wasAboveThreshold && isNowAtOrBelowThreshold) {
+          lowStockTransitions.push(product.id);
+        }
+
         await tx.orm.public.Product.where({ id: product.id }).update({
           stock: newStock,
         });
@@ -146,6 +159,7 @@ export async function POST(request: Request, { params }: RouteContext) {
           event: 'INVENTORY_UPDATED',
           orderId: order.id,
           productIds: updatedProductIds,
+          lowStockTransitions,
         }),
         status: 'PENDING',
       });

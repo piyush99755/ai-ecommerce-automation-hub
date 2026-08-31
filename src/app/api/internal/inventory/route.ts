@@ -22,9 +22,10 @@ export async function GET(request: Request) {
       return authError;
     }
 
-    // 2. Parse optional state query parameter
+    // 2. Parse optional state and productIds query parameters
     const { searchParams } = new URL(request.url);
     const stateFilter = searchParams.get('state')?.trim().toUpperCase();
+    const productIdsFilter = searchParams.get('productIds')?.split(',').map((id) => id.trim()).filter(Boolean);
 
     // 3. Fetch all Products from PostgreSQL
     const products = await db.orm.public.Product.all();
@@ -43,9 +44,14 @@ export async function GET(request: Request) {
     });
 
     // 5. Apply optional filtering
-    const filteredProducts = stateFilter && stateFilter !== 'ALL'
-      ? mappedProducts.filter((p) => p.inventoryState === stateFilter)
-      : mappedProducts;
+    let filteredProducts = mappedProducts;
+    if (stateFilter && stateFilter !== 'ALL') {
+      filteredProducts = filteredProducts.filter((p) => p.inventoryState === stateFilter);
+    }
+    if (productIdsFilter && productIdsFilter.length > 0) {
+      const idSet = new Set(productIdsFilter);
+      filteredProducts = filteredProducts.filter((p) => idSet.has(p.productId));
+    }
 
     return NextResponse.json(filteredProducts, { status: 200 });
   } catch (error: unknown) {

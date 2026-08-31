@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" style="background:#0F172A; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <defs>
+    <!-- Arrowhead markers -->
+    <marker id="arr-sky" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8"/>
+    </marker>
+    <marker id="arr-amber" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#F59E0B"/>
+    </marker>
+    <marker id="arr-orange" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#FF7A59"/>
+    </marker>
+    <marker id="arr-emerald" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#34D399"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1600" height="900" fill="#0F172A"/>
+
+  <!-- Header Bar -->
+  <rect x="40" y="40" width="1520" height="90" rx="16" fill="#1E293B" stroke="#334155" stroke-width="1.5"/>
+  <text x="70" y="82" fill="#F8FAFC" font-size="28" font-weight="800" letter-spacing="-0.5">HubSpot CRM Automation Workflow</text>
+  <text x="70" y="110" fill="#94A3B8" font-size="15" font-weight="500">Privacy-Preserving PII Isolation, Protected On-Demand Context Retrieval, and Idempotent Downstream Sync</text>
+  
+  <!-- Status Badge -->
+  <rect x="1350" y="65" width="180" height="38" rx="8" fill="#FEF3C7" fill-opacity="0.1" stroke="#F59E0B" stroke-width="1.5"/>
+  <circle cx="1370" cy="84" r="5" fill="#F59E0B"/>
+  <text x="1385" y="89" fill="#FBBF24" font-size="13" font-weight="700" letter-spacing="0.5">IN DEVELOPMENT</text>
+
+  <!-- High-Level Invariant Badges -->
+  <g transform="translate(40, 155)">
+    <rect width="360" height="42" rx="8" fill="#059669" fill-opacity="0.15" stroke="#34D399" stroke-width="1"/>
+    <text x="15" y="26" fill="#34D399" font-size="13" font-weight="700">✓ PostgreSQL Authoritative Source of Truth</text>
+
+    <rect x="380" width="370" height="42" rx="8" fill="#0284C7" fill-opacity="0.15" stroke="#38BDF8" stroke-width="1"/>
+    <text x="395" y="26" fill="#38BDF8" font-size="13" font-weight="700">✓ Outbox Payloads Exclude Raw PII (IDs Only)</text>
+
+    <rect x="770" width="370" height="42" rx="8" fill="#D97706" fill-opacity="0.15" stroke="#FBBF24" stroke-width="1"/>
+    <text x="785" y="26" fill="#FBBF24" font-size="13" font-weight="700">✓ Protected Context API (/crm-context)</text>
+
+    <rect x="1160" width="400" height="42" rx="8" fill="#EA580C" fill-opacity="0.15" stroke="#FF7A59" stroke-width="1"/>
+    <text x="1175" y="26" fill="#FF7A59" font-size="13" font-weight="700">✓ Contact Identity (Email) &amp; Deal (orderId)</text>
+  </g>
+
+  <!-- Main Architecture Containers -->
+
+  <!-- Box 1: CORE BACKEND & EVENT EMISSION -->
+  <rect x="40" y="230" width="600" height="610" rx="16" fill="#1E293B" stroke="#0284C7" stroke-width="2"/>
+  <rect x="65" y="255" width="340" height="32" rx="6" fill="#0369A1" fill-opacity="0.3"/>
+  <text x="75" y="276" fill="#38BDF8" font-size="13" font-weight="800" letter-spacing="0.5">CORE BACKEND &amp; TRANSACTIONAL OUTBOX</text>
+
+  <!-- Step 1: Business Events -->
+  <g transform="translate(65, 305)">
+    <rect width="550" height="110" rx="10" fill="#0F172A" stroke="#334155"/>
+    <text x="20" y="30" fill="#F8FAFC" font-size="15" font-weight="700">1. Domain State Mutation</text>
+    <text x="20" y="52" fill="#94A3B8" font-size="13">• Payment Succeeded: <tspan fill="#34D399" font-weight="600">paymentStatus = PAID</tspan></text>
+    <text x="20" y="72" fill="#94A3B8" font-size="13">• Order Status Updated: <tspan fill="#38BDF8" font-weight="600">status = PROCESSING / SHIPPED / DELIVERED</tspan></text>
+    <text x="20" y="92" fill="#94A3B8" font-size="12">Committed atomically inside db.transaction in Neon PostgreSQL</text>
+  </g>
+
+  <!-- Step 2: Outbox Event Record -->
+  <g transform="translate(65, 435)">
+    <rect width="550" height="150" rx="10" fill="#0F172A" stroke="#34D399"/>
+    <text x="20" y="30" fill="#34D399" font-size="15" font-weight="700">2. Minimal Outbox Event Record (OutboxEvent)</text>
+    <text x="20" y="52" fill="#CBD5E1" font-size="13">PII-Minimized Event Payload:</text>
+    
+    <rect x="20" y="62" width="510" height="70" rx="6" fill="#1E293B" stroke="#334155"/>
+    <text x="30" y="84" fill="#F8FAFC" font-size="12" font-family="monospace">{ "eventId": "evt_123", "event": "PAYMENT_SUCCEEDED",</text>
+    <text x="30" y="104" fill="#F8FAFC" font-size="12" font-family="monospace">  "orderId": "ord_999", "customerId": "cust_888" }</text>
+    <text x="30" y="122" fill="#34D399" font-size="11" font-weight="600">✓ Excludes raw customer email/phone from generic outbox payloads</text>
+  </g>
+
+  <!-- Step 3: Protected Context Endpoint -->
+  <g transform="translate(65, 605)">
+    <rect width="550" height="215" rx="10" fill="#0F172A" stroke="#F59E0B" stroke-width="1.5"/>
+    <text x="20" y="30" fill="#FBBF24" font-size="15" font-weight="700">3. Protected CRM Context API Endpoint</text>
+    <text x="20" y="50" fill="#94A3B8" font-size="13">GET /api/internal/orders/[id]/crm-context (Protected by X-Automation-Secret)</text>
+
+    <rect x="20" y="62" width="510" height="135" rx="6" fill="#1E293B" stroke="#334155"/>
+    <text x="30" y="82" fill="#FBBF24" font-size="12" font-weight="700">Sanitized On-Demand Context Response (200 OK):</text>
+    <text x="30" y="100" fill="#CBD5E1" font-size="11" font-family="monospace">{ orderId, customerId, totalCents, paymentStatus,</text>
+    <text x="30" y="116" fill="#CBD5E1" font-size="11" font-family="monospace">  status, carrier, trackingNumber,</text>
+    <text x="30" y="132" fill="#CBD5E1" font-size="11" font-family="monospace">  customer: { name, email } }</text>
+    <text x="30" y="180" fill="#FBBF24" font-size="11" font-weight="600">✓ Read-only execution with zero DB mutations &amp; zero secret leaks</text>
+  </g>
+
+  <!-- Box 2: n8n ORCHESTRATION & HUBSPOT SYNC -->
+  <rect x="690" y="230" width="870" height="610" rx="16" fill="#1B1B3A" stroke="#FF7A59" stroke-width="2"/>
+  <rect x="715" y="255" width="410" height="32" rx="6" fill="#FF7A59" fill-opacity="0.2"/>
+  <text x="725" y="276" fill="#FF7A59" font-size="13" font-weight="800" letter-spacing="0.5">n8n AUTOMATION ENGINE &amp; HUBSPOT CRM SYNC</text>
+
+  <!-- n8n Workflow Step 1: Webhook & Dedupe -->
+  <g transform="translate(715, 305)">
+    <rect width="820" height="120" rx="10" fill="#0F172A" stroke="#FF6D5A"/>
+    <text x="20" y="30" fill="#FF6D5A" font-size="15" font-weight="700">4. n8n Event Webhook &amp; Idempotency Check</text>
+    <text x="20" y="52" fill="#CBD5E1" font-size="13">• Receives event payload with stable <tspan fill="#38BDF8" font-weight="700">eventId</tspan></text>
+    <text x="20" y="72" fill="#CBD5E1" font-size="13">• Uses stable <tspan fill="#38BDF8" font-weight="700">eventId</tspan> for idempotent downstream processing</text>
+    <text x="20" y="92" fill="#CBD5E1" font-size="13">• Prevents duplicate CRM updates during outbox retries</text>
+  </g>
+
+  <!-- n8n Workflow Step 2: Context Retrieval -->
+  <g transform="translate(715, 445)">
+    <rect width="820" height="95" rx="10" fill="#0F172A" stroke="#F59E0B"/>
+    <text x="20" y="30" fill="#FBBF24" font-size="15" font-weight="700">5. Authenticated Context Retrieval</text>
+    <text x="20" y="52" fill="#CBD5E1" font-size="13">• n8n HTTP Request node calls <tspan fill="#FBBF24" font-weight="700">GET /api/internal/orders/[id]/crm-context</tspan></text>
+    <text x="20" y="72" fill="#CBD5E1" font-size="13">• Passes <tspan fill="#FBBF24" font-weight="700">X-Automation-Secret</tspan> header to safely retrieve customer email &amp; order details</text>
+  </g>
+
+  <!-- n8n Workflow Step 3: HubSpot Contact & Deal Upsert -->
+  <g transform="translate(715, 560)">
+    <rect width="395" height="260" rx="12" fill="#0F172A" stroke="#FF7A59" stroke-width="1.5"/>
+    <rect width="395" height="32" rx="12" fill="#FF7A59" fill-opacity="0.2"/>
+    <text x="15" y="22" fill="#FF7A59" font-size="13" font-weight="800">6. HUBSPOT CONTACT UPSERT</text>
+    
+    <text x="15" y="58" fill="#F8FAFC" font-size="14" font-weight="700">Contact Identity Strategy:</text>
+    <text x="15" y="80" fill="#E2E8F0" font-size="13">• Primary Key = <tspan fill="#FF7A59" font-weight="700">customer.email</tspan></text>
+    <text x="15" y="100" fill="#E2E8F0" font-size="13">• External Ref = <tspan fill="#CBD5E1" font-weight="600">customerId</tspan></text>
+    
+    <rect x="15" y="118" width="365" height="120" rx="6" fill="#1E293B" stroke="#334155"/>
+    <text x="25" y="140" fill="#FF7A59" font-size="12" font-weight="700">Upsert Execution:</text>
+    <text x="25" y="160" fill="#CBD5E1" font-size="12">1. Search Contact by email</text>
+    <text x="25" y="180" fill="#CBD5E1" font-size="12">2. Update if Contact exists</text>
+    <text x="25" y="200" fill="#CBD5E1" font-size="12">3. Create if Contact is new</text>
+    <text x="25" y="225" fill="#34D399" font-size="11" font-weight="600">✓ Prevents duplicate CRM contacts</text>
+  </g>
+
+  <g transform="translate(1130, 560)">
+    <rect width="405" height="260" rx="12" fill="#0F172A" stroke="#FF7A59" stroke-width="1.5"/>
+    <rect width="405" height="32" rx="12" fill="#FF7A59" fill-opacity="0.2"/>
+    <text x="15" y="22" fill="#FF7A59" font-size="13" font-weight="800">7. HUBSPOT DEAL UPSERT &amp; STAGE</text>
+    
+    <text x="15" y="58" fill="#F8FAFC" font-size="14" font-weight="700">Deal Identity &amp; Lifecycle Stage:</text>
+    <text x="15" y="80" fill="#E2E8F0" font-size="13">• Deal Primary Key = <tspan fill="#FF7A59" font-weight="700">orderId</tspan></text>
+    
+    <rect x="15" y="98" width="375" height="145" rx="6" fill="#1E293B" stroke="#334155"/>
+    <text x="25" y="120" fill="#FF7A59" font-size="12" font-weight="700">Lifecycle Stage Mapping:</text>
+    <text x="25" y="140" fill="#CBD5E1" font-size="12">• PAYMENT_SUCCEEDED $\rightarrow$ <tspan fill="#34D399" font-weight="700">PAID_CUSTOMER</tspan></text>
+    <text x="25" y="160" fill="#CBD5E1" font-size="12">• ORDER_STATUS_UPDATED $\rightarrow$ <tspan fill="#38BDF8" font-weight="700">PROCESSING</tspan></text>
+    <text x="25" y="180" fill="#CBD5E1" font-size="12">• Status = SHIPPED $\rightarrow$ <tspan fill="#818CF8" font-weight="700">SHIPPED</tspan></text>
+    <text x="25" y="200" fill="#CBD5E1" font-size="12">• Status = DELIVERED $\rightarrow$ <tspan fill="#34D399" font-weight="700">DELIVERED</tspan></text>
+    <text x="25" y="225" fill="#FF7A59" font-size="11" font-weight="600">[n8n HUBSPOT SYNC READY]</text>
+  </g>
+
+  <!-- Connectors / Arrows -->
+  <!-- Step 2 to Step 4 (Outbox to n8n Webhook) -->
+  <path d="M 615 510 L 665 510 L 665 365 L 715 365" stroke="#38BDF8" stroke-width="2.5" marker-end="url(#arr-sky)"/>
+  <!-- Step 4 to Step 5 (n8n Webhook to Context Fetch) -->
+  <path d="M 1125 425 L 1125 445" stroke="#F59E0B" stroke-width="2" marker-end="url(#arr-amber)"/>
+  <!-- Step 5 back to GET /crm-context endpoint box -->
+  <path d="M 715 490 L 665 490 L 665 710 L 615 710" stroke="#F59E0B" stroke-width="2.5" stroke-dasharray="4" marker-end="url(#arr-amber)"/>
+  <!-- Step 5 to Step 6 & 7 (n8n Context to HubSpot Contact & Deal) -->
+  <path d="M 1125 540 L 910 540 L 910 560" stroke="#FF7A59" stroke-width="2" marker-end="url(#arr-orange)"/>
+  <path d="M 1125 540 L 1330 540 L 1330 560" stroke="#FF7A59" stroke-width="2" marker-end="url(#arr-orange)"/>
+
+</svg>
