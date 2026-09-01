@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 
 interface AddToCartButtonProps {
@@ -15,6 +16,7 @@ interface AddToCartButtonProps {
 
 export default function AddToCartButton({ product }: AddToCartButtonProps) {
   const { addItem } = useCart();
+  const router = useRouter();
   const [added, setAdded] = useState(false);
 
   const isOutOfStock = product.stock <= 0;
@@ -30,9 +32,7 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
     });
 
     setAdded(true);
-    setTimeout(() => {
-      setAdded(false);
-    }, 2000);
+    router.push('/cart');
   };
 
   return (

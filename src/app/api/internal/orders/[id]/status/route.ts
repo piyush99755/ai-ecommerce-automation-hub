@@ -163,6 +163,22 @@ export async function POST(request: Request, { params }: RouteContext) {
         status: 'PENDING',
       });
 
+      // Create durable notification OutboxEvent atomically inside the SAME transaction
+      const notificationEventType = targetStatus === 'SHIPPED' ? 'ORDER_SHIPPED_NOTIFICATION' : 'ORDER_DELIVERED_NOTIFICATION';
+      await tx.orm.public.OutboxEvent.create({
+        eventType: notificationEventType,
+        aggregateType: 'Order',
+        aggregateId: order.id,
+        payload: JSON.stringify({
+          event: notificationEventType,
+          orderId: order.id,
+          status: targetStatus,
+          carrier: carrier || order.carrier,
+          trackingNumber: trackingNumber || order.trackingNumber,
+        }),
+        status: 'PENDING',
+      });
+
       return {
         statusCode: 200,
         payload: {
@@ -172,34 +188,8 @@ export async function POST(request: Request, { params }: RouteContext) {
           carrier: carrier || order.carrier,
           trackingNumber: trackingNumber || order.trackingNumber,
         },
-        shouldSendEmail: true,
-        targetStatus,
-        customerEmail: customer ? customer.email : null,
-        carrier: carrier || order.carrier,
-        trackingNumber: trackingNumber || order.trackingNumber,
       };
     });
-
-    // 5. Post-Commit Customer Email Dispatch (Best-effort delivery)
-    if (transactionResult.shouldSendEmail && transactionResult.customerEmail && transactionResult.targetStatus) {
-      try {
-        if (transactionResult.targetStatus === 'SHIPPED') {
-          await sendOrderShippedEmail({
-            orderId: transactionResult.payload.orderId,
-            customerEmail: transactionResult.customerEmail,
-            carrier: transactionResult.carrier,
-            trackingNumber: transactionResult.trackingNumber,
-          });
-        } else if (transactionResult.targetStatus === 'DELIVERED') {
-          await sendOrderDeliveredEmail({
-            orderId: transactionResult.payload.orderId,
-            customerEmail: transactionResult.customerEmail,
-          });
-        }
-      } catch (emailErr) {
-        console.warn('[internal-api] Non-fatal failure sending order status email:', emailErr);
-      }
-    }
 
     return NextResponse.json(transactionResult.payload, { status: transactionResult.statusCode });
   } catch (error: unknown) {

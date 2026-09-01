@@ -19,16 +19,23 @@ const MAX_ATTEMPTS = 5;
 export const STALE_PROCESSING_LEASE_MS = 5 * 60 * 1000; // 5 minutes lease timeout
 
 export function resolveWebhookUrlForEventType(eventType: string): string | null {
+  if (
+    eventType === 'ORDER_PROCESSING_NOTIFICATION' ||
+    eventType === 'ORDER_SHIPPED_NOTIFICATION' ||
+    eventType === 'ORDER_DELIVERED_NOTIFICATION'
+  ) {
+    return process.env.N8N_EMAIL_NOTIFICATION_WEBHOOK_URL || null;
+  }
   if (eventType === 'PAYMENT_SUCCEEDED') {
-    return process.env.N8N_PAYMENT_SUCCEEDED_WEBHOOK_URL || process.env.N8N_ORDER_CREATED_WEBHOOK_URL || null;
+    return process.env.N8N_PAYMENT_SUCCEEDED_WEBHOOK_URL || null;
   }
   if (eventType === 'INVENTORY_UPDATED') {
-    return process.env.N8N_INVENTORY_UPDATED_WEBHOOK_URL || process.env.N8N_ORDER_CREATED_WEBHOOK_URL || null;
+    return process.env.N8N_INVENTORY_UPDATED_WEBHOOK_URL || null;
   }
   if (eventType === 'ORDER_STATUS_UPDATED') {
-    return process.env.N8N_ORDER_STATUS_WEBHOOK_URL || process.env.N8N_ORDER_CREATED_WEBHOOK_URL || null;
+    return process.env.N8N_ORDER_STATUS_WEBHOOK_URL || null;
   }
-  return process.env.N8N_ORDER_CREATED_WEBHOOK_URL || null;
+  return null;
 }
 
 export async function processOutboxEvents(batchSize: number = 10): Promise<ProcessOutboxResult> {

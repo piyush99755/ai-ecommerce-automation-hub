@@ -2,6 +2,7 @@ import { db } from '@/prisma/db';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { PayOrderButton } from '@/components/orders/PayOrderButton';
+import { OrderStatusPoller } from '@/components/orders/OrderStatusPoller';
 
 export const revalidate = 0;
 
@@ -14,14 +15,30 @@ function formatPrice(priceCents: number): string {
 
 interface OrderConfirmationPageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ session_id?: string }>;
 }
 
-export default async function OrderConfirmationPage({ params }: OrderConfirmationPageProps) {
+export default async function OrderConfirmationPage({
+  params,
+  searchParams,
+}: OrderConfirmationPageProps) {
   const { id } = await params;
+  const { session_id: sessionId } = await searchParams;
 
   const order = await db.orm.public.Order.where({ id }).first();
 
   if (!order) {
+    notFound();
+  }
+
+  // Consistent order-scoped security rule:
+  // Access succeeds ONLY when request session_id exists, stored order.stripeCheckoutSessionId exists, and both match.
+  const isAuthorized =
+    Boolean(sessionId) &&
+    Boolean(order.stripeCheckoutSessionId) &&
+    sessionId === order.stripeCheckoutSessionId;
+
+  if (!isAuthorized) {
     notFound();
   }
 
@@ -74,28 +91,13 @@ export default async function OrderConfirmationPage({ params }: OrderConfirmatio
             </div>
           )}
 
-          {/* Status Indicators */}
-          <div className="grid grid-cols-2 gap-4 py-6 border-b border-gray-100 text-center">
-            <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-              <span className="text-xs text-gray-400 uppercase tracking-wider font-semibold block mb-1">
-                Order Status
-              </span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
-                {order.status}
-              </span>
-            </div>
-
-            <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-              <span className="text-xs text-gray-400 uppercase tracking-wider font-semibold block mb-1">
-                Payment Status
-              </span>
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                order.paymentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-              }`}>
-                {order.paymentStatus}
-              </span>
-            </div>
-          </div>
+          {/* Status Indicators & Live Poller */}
+          <OrderStatusPoller
+            orderId={order.id}
+            initialStatus={order.status}
+            initialPaymentStatus={order.paymentStatus}
+            sessionId={sessionId}
+          />
 
           {/* Customer Details */}
           {customer && (

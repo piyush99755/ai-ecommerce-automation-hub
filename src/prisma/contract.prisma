@@ -103,3 +103,18 @@ model OutboxEvent {
   @@index([status, nextAttemptAt])
   @@index([aggregateType, aggregateId])
 }
+
+model ConsumerEvent {
+  id           String            @id @default(dbgenerated("gen_random_uuid()"))
+  consumerId   String
+  eventId      String
+  status       String            @default("PROCESSING")
+  attemptCount Int               @default(1)
+  claimedAt    TimestamptzString @default(now())
+  completedAt  TimestamptzString?
+  lastError    String?
+  createdAt    TimestamptzString @default(now())
+
+  @@unique([consumerId, eventId])
+  @@index([status, claimedAt])
+}

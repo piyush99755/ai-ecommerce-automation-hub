@@ -4,6 +4,7 @@ export interface OrderProcessingEmailPayload {
   orderId: string;
   customerEmail: string;
   status: string;
+  eventId?: string;
 }
 
 export interface OrderShippedEmailPayload {
@@ -11,11 +12,13 @@ export interface OrderShippedEmailPayload {
   customerEmail: string;
   carrier?: string | null;
   trackingNumber?: string | null;
+  eventId?: string;
 }
 
 export interface OrderDeliveredEmailPayload {
   orderId: string;
   customerEmail: string;
+  eventId?: string;
 }
 
 function maskEmail(email: string): string {
@@ -47,12 +50,16 @@ export async function sendOrderProcessingEmail(
           </div>
         </div>
       `;
+      const options: { idempotencyKey?: string } = {};
+      if (payload.eventId) {
+        options.idempotencyKey = payload.eventId;
+      }
       const response = await resend.emails.send({
         from: fromAddress.trim(),
         to: [payload.customerEmail],
         subject,
         html: htmlContent,
-      });
+      }, options);
 
       if (response.error) {
         console.warn(`[email-provider] Resend error for recipient=${maskEmail(payload.customerEmail)}:`, response.error.message);
@@ -94,12 +101,16 @@ export async function sendOrderShippedEmail(
           </div>
         </div>
       `;
+      const options: { idempotencyKey?: string } = {};
+      if (payload.eventId) {
+        options.idempotencyKey = payload.eventId;
+      }
       const response = await resend.emails.send({
         from: fromAddress.trim(),
         to: [payload.customerEmail],
         subject,
         html: htmlContent,
-      });
+      }, options);
 
       if (response.error) {
         console.warn(`[email-provider] Resend error for recipient=${maskEmail(payload.customerEmail)}:`, response.error.message);
@@ -137,12 +148,16 @@ export async function sendOrderDeliveredEmail(
           </div>
         </div>
       `;
+      const options: { idempotencyKey?: string } = {};
+      if (payload.eventId) {
+        options.idempotencyKey = payload.eventId;
+      }
       const response = await resend.emails.send({
         from: fromAddress.trim(),
         to: [payload.customerEmail],
         subject,
         html: htmlContent,
-      });
+      }, options);
 
       if (response.error) {
         console.warn(`[email-provider] Resend error for recipient=${maskEmail(payload.customerEmail)}:`, response.error.message);
