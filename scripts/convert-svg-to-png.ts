@@ -6,6 +6,10 @@ const { chromium } = playwright;
 
 const DIAGRAMS = [
   {
+    svgName: '00-portfolio-overview.svg',
+    pngName: '00-portfolio-overview.png',
+  },
+  {
     svgName: '01-system-architecture.svg',
     pngName: '01-system-architecture.png',
   },
