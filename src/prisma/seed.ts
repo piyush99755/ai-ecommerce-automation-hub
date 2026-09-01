@@ -8,7 +8,7 @@ const products = [
     priceCents: 12999,
     stock: 15,
     category: 'Workspace',
-    imageUrl: '/images/products/keyboard.jpg',
+    imageUrl: '/products/keyboard.svg',
   },
   {
     name: 'Ergonomic Wireless Mouse',
@@ -17,7 +17,7 @@ const products = [
     priceCents: 5999,
     stock: 2,
     category: 'Workspace',
-    imageUrl: '/images/products/mouse.jpg',
+    imageUrl: '/products/mouse.svg',
   },
   {
     name: 'USB-C Charging Hub',
@@ -26,7 +26,7 @@ const products = [
     priceCents: 4999,
     stock: 25,
     category: 'Accessories',
-    imageUrl: '/images/products/hub.jpg',
+    imageUrl: '/products/hub.svg',
   },
   {
     name: 'Noise-Cancelling Headphones',
@@ -35,7 +35,7 @@ const products = [
     priceCents: 24999,
     stock: 8,
     category: 'Audio',
-    imageUrl: '/images/products/headphones.jpg',
+    imageUrl: '/products/headphones.svg',
   },
   {
     name: 'Smart Desk Lamp',
@@ -44,7 +44,7 @@ const products = [
     priceCents: 3999,
     stock: 1,
     category: 'Workspace',
-    imageUrl: '/images/products/lamp.jpg',
+    imageUrl: '/products/lamp.svg',
   },
   {
     name: 'Aluminum Laptop Stand',
@@ -53,7 +53,7 @@ const products = [
     priceCents: 3499,
     stock: 12,
     category: 'Accessories',
-    imageUrl: '/images/products/stand.jpg',
+    imageUrl: '/products/stand.svg',
   },
   {
     name: 'Portable SSD 1TB',
@@ -62,7 +62,7 @@ const products = [
     priceCents: 8999,
     stock: 30,
     category: 'Storage',
-    imageUrl: '/images/products/ssd.jpg',
+    imageUrl: '/products/ssd.svg',
   },
   {
     name: 'Minimalist Tech Backpack',
@@ -71,7 +71,7 @@ const products = [
     priceCents: 7999,
     stock: 6,
     category: 'Lifestyle',
-    imageUrl: '/images/products/backpack.jpg',
+    imageUrl: '/products/backpack.svg',
   },
   {
     name: 'Wireless Charging Pad',
@@ -80,7 +80,7 @@ const products = [
     priceCents: 2999,
     stock: 20,
     category: 'Accessories',
-    imageUrl: '/images/products/charger.jpg',
+    imageUrl: '/products/charger.svg',
   },
   {
     name: 'Smart Water Bottle',
@@ -89,7 +89,7 @@ const products = [
     priceCents: 4499,
     stock: 10,
     category: 'Lifestyle',
-    imageUrl: '/images/products/bottle.jpg',
+    imageUrl: '/products/bottle.svg',
   },
 ];
 

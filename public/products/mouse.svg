@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs>
+    <linearGradient id="bg-mouse" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#1E293B" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bg-mouse)" />
+  <!-- Mouse Body -->
+  <ellipse cx="200" cy="150" rx="60" ry="90" fill="#334155" stroke="#38BDF8" stroke-width="2" />
+  <!-- Split line -->
+  <line x1="200" y1="60" x2="200" y2="130" stroke="#0EA5E9" stroke-width="2" />
+  <!-- Scroll wheel -->
+  <rect x="194" y="90" width="12" height="24" rx="6" fill="#38BDF8" />
+  <!-- Ergonomic thumb rest -->
+  <path d="M 140 140 Q 120 170 145 200 Z" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5" />
+  <text x="200" y="260" fill="#94A3B8" font-size="14" font-weight="600" text-anchor="middle" font-family="sans-serif">Ergonomic Wireless Mouse</text>
+</svg>

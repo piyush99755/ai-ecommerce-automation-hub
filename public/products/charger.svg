@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs>
+    <linearGradient id="bg-chg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#1E293B" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bg-chg)" />
+  <!-- Charging pad circle -->
+  <circle cx="200" cy="140" r="75" fill="#334155" stroke="#34D399" stroke-width="2" />
+  <circle cx="200" cy="140" r="60" fill="#1E293B" />
+  <!-- Lightning bolt / Qi icon -->
+  <polygon points="205,100 185,145 200,145 195,180 215,135 200,135" fill="#34D399" />
+  <text x="200" y="260" fill="#94A3B8" font-size="14" font-weight="600" text-anchor="middle" font-family="sans-serif">Wireless Charging Pad</text>
+</svg>

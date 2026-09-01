@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E1B4B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="kbd-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#334155" />
+      <stop offset="100%" stop-color="#1E293B" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bg-grad)" />
+  <!-- Keyboard Chassis -->
+  <rect x="50" y="80" width="300" height="140" rx="12" fill="url(#kbd-grad)" stroke="#6366F1" stroke-width="2" />
+  <!-- Key grid -->
+  <g fill="#475569" rx="3">
+    <rect x="65" y="95" width="22" height="18" rx="3" fill="#6366F1" opacity="0.8"/>
+    <rect x="92" y="95" width="22" height="18" rx="3"/>
+    <rect x="119" y="95" width="22" height="18" rx="3"/>
+    <rect x="146" y="95" width="22" height="18" rx="3"/>
+    <rect x="173" y="95" width="22" height="18" rx="3"/>
+    <rect x="200" y="95" width="22" height="18" rx="3"/>
+    <rect x="227" y="95" width="22" height="18" rx="3"/>
+    <rect x="254" y="95" width="22" height="18" rx="3"/>
+    <rect x="281" y="95" width="22" height="18" rx="3"/>
+    <rect x="308" y="95" width="27" height="18" rx="3" fill="#A855F7"/>
+
+    <rect x="65" y="120" width="30" height="18" rx="3" fill="#0EA5E9"/>
+    <rect x="100" y="120" width="22" height="18" rx="3"/>
+    <rect x="127" y="120" width="22" height="18" rx="3"/>
+    <rect x="154" y="120" width="22" height="18" rx="3"/>
+    <rect x="181" y="120" width="22" height="18" rx="3"/>
+    <rect x="208" y="120" width="22" height="18" rx="3"/>
+    <rect x="235" y="120" width="22" height="18" rx="3"/>
+    <rect x="262" y="120" width="22" height="18" rx="3"/>
+    <rect x="289" y="120" width="46" height="18" rx="3" fill="#0EA5E9"/>
+
+    <rect x="65" y="145" width="38" height="18" rx="3" fill="#10B981"/>
+    <rect x="108" y="145" width="22" height="18" rx="3"/>
+    <rect x="135" y="145" width="22" height="18" rx="3"/>
+    <rect x="162" y="145" width="22" height="18" rx="3"/>
+    <rect x="189" y="145" width="22" height="18" rx="3"/>
+    <rect x="216" y="145" width="22" height="18" rx="3"/>
+    <rect x="243" y="145" width="22" height="18" rx="3"/>
+    <rect x="270" y="145" width="65" height="18" rx="3" fill="#10B981"/>
+
+    <!-- Spacebar Row -->
+    <rect x="65" y="170" width="40" height="20" rx="3"/>
+    <rect x="110" y="170" width="30" height="20" rx="3"/>
+    <rect x="145" y="170" width="110" height="20" rx="3" fill="#6366F1"/>
+    <rect x="260" y="170" width="30" height="20" rx="3"/>
+    <rect x="295" y="170" width="40" height="20" rx="3"/>
+  </g>
+  <text x="200" y="260" fill="#94A3B8" font-size="14" font-weight="600" text-anchor="middle" font-family="sans-serif">Wireless Mechanical Keyboard</text>
+</svg>

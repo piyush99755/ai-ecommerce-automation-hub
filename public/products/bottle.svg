@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs>
+    <linearGradient id="bg-btl" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bg-btl)" />
+  <!-- Bottle body -->
+  <rect x="160" y="90" width="80" height="130" rx="16" fill="#334155" stroke="#38BDF8" stroke-width="2" />
+  <!-- Bottle cap -->
+  <rect x="175" y="65" width="50" height="25" rx="6" fill="#0EA5E9" />
+  <!-- UV / Temp ring -->
+  <line x1="160" y1="130" x2="240" y2="130" stroke="#38BDF8" stroke-width="3" />
+  <!-- Display LED -->
+  <circle cx="200" cy="77" r="5" fill="#34D399" />
+  <text x="200" y="260" fill="#94A3B8" font-size="14" font-weight="600" text-anchor="middle" font-family="sans-serif">Smart Water Bottle</text>
+</svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs>
+    <linearGradient id="bg-bp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#18181B" />
+      <stop offset="100%" stop-color="#27272A" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bg-bp)" />
+  <!-- Backpack body -->
+  <path d="M 140 90 Q 200 60 260 90 L 270 210 Q 200 230 130 210 Z" fill="#3F3F46" stroke="#A1A1AA" stroke-width="2" />
+  <!-- Front pocket -->
+  <path d="M 150 140 L 250 140 L 245 200 Q 200 215 155 200 Z" fill="#27272A" stroke="#71717A" stroke-width="1.5" />
+  <!-- Zipper accent -->
+  <line x1="160" y1="140" x2="240" y2="140" stroke="#38BDF8" stroke-width="2" />
+  <!-- Top handle -->
+  <path d="M 180 70 Q 200 50 220 70" fill="none" stroke="#71717A" stroke-width="4" />
+  <text x="200" y="260" fill="#94A3B8" font-size="14" font-weight="600" text-anchor="middle" font-family="sans-serif">Minimalist Tech Backpack</text>
+</svg>

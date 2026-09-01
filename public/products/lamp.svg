@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs>
+    <linearGradient id="bg-lamp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#1E293B" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bg-lamp)" />
+  <!-- Base -->
+  <rect x="130" y="210" width="140" height="15" rx="7" fill="#334155" stroke="#F59E0B" stroke-width="1.5" />
+  <!-- Stem -->
+  <path d="M 200 210 L 200 90 L 290 90" fill="none" stroke="#64748B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round" />
+  <!-- Light head -->
+  <rect x="250" y="82" width="80" height="16" rx="6" fill="#F59E0B" />
+  <!-- Light Beam -->
+  <polygon points="255,98 325,98 350,220 230,220" fill="#FDE68A" opacity="0.15" />
+  <text x="200" y="260" fill="#94A3B8" font-size="14" font-weight="600" text-anchor="middle" font-family="sans-serif">Smart Desk Lamp</text>
+</svg>
