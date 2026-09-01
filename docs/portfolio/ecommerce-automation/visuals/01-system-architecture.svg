@@ -10,6 +10,9 @@
     <marker id="arrow-purple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
       <path d="M 0 1 L 10 5 L 0 9 z" fill="#A78BFA"/>
     </marker>
+    <marker id="arrow-rose" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#FB7185"/>
+    </marker>
 
     <!-- Gradients -->
     <linearGradient id="core-grad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -30,70 +33,89 @@
   <text x="70" y="82" fill="#F8FAFC" font-size="28" font-weight="800" letter-spacing="-0.5">AI E-commerce Automation Hub — System Architecture</text>
   <text x="70" y="110" fill="#94A3B8" font-size="15" font-weight="500">Decoupled Event-Driven Architecture with PostgreSQL Source of Truth and n8n Workflow Orchestration</text>
   
-  <!-- Status Badge -->
-  <rect x="1350" y="65" width="180" height="38" rx="8" fill="#FEF3C7" fill-opacity="0.1" stroke="#F59E0B" stroke-width="1.5"/>
-  <circle cx="1370" cy="84" r="5" fill="#F59E0B"/>
-  <text x="1385" y="89" fill="#FBBF24" font-size="13" font-weight="700" letter-spacing="0.5">IN DEVELOPMENT</text>
+  <!-- Status Badge (Technically Conservative) -->
+  <rect x="1350" y="65" width="180" height="38" rx="8" fill="#10B981" fill-opacity="0.15" stroke="#34D399" stroke-width="1.5"/>
+  <circle cx="1370" cy="84" r="5" fill="#34D399"/>
+  <text x="1385" y="89" fill="#34D399" font-size="13" font-weight="800" letter-spacing="0.5">E2E VERIFIED</text>
 
   <!-- Left Region: CORE APPLICATION / SOURCE OF TRUTH -->
-  <rect x="40" y="160" width="730" height="700" rx="20" fill="url(#core-grad)" stroke="#0284C7" stroke-width="2" stroke-dasharray="none"/>
+  <rect x="40" y="160" width="730" height="700" rx="20" fill="url(#core-grad)" stroke="#0284C7" stroke-width="2"/>
   
   <!-- Region Header -->
   <rect x="65" y="185" width="370" height="36" rx="8" fill="#0369A1" fill-opacity="0.25" stroke="#38BDF8" stroke-width="1"/>
   <text x="80" y="208" fill="#38BDF8" font-size="13" font-weight="800" letter-spacing="1">CORE APPLICATION / SOURCE OF TRUTH</text>
 
-  <!-- Core Component 1: Client Checkout UI -->
-  <g transform="translate(70, 245)">
-    <rect width="310" height="110" rx="12" fill="#1E293B" stroke="#475569" stroke-width="1.5"/>
+  <!-- Core Component 1: Client Storefront UI -->
+  <g transform="translate(70, 240)">
+    <rect width="310" height="115" rx="12" fill="#1E293B" stroke="#475569" stroke-width="1.5"/>
     <rect width="310" height="32" rx="12" fill="#334155"/>
     <circle cx="20" cy="16" r="4" fill="#EF4444"/>
     <circle cx="34" cy="16" r="4" fill="#F59E0B"/>
     <circle cx="48" cy="16" r="4" fill="#10B981"/>
-    <text x="65" y="21" fill="#CBD5E1" font-size="12" font-weight="600">Client Checkout UI (Next.js React)</text>
-    <text x="20" y="60" fill="#F8FAFC" font-size="15" font-weight="700">Storefront &amp; Checkout UI</text>
-    <text x="20" y="82" fill="#94A3B8" font-size="13">Cart Management &amp; Customer Order Form</text>
-    <rect x="20" y="92" width="90" height="18" rx="4" fill="#0EA5E9" fill-opacity="0.2"/>
-    <text x="26" y="105" fill="#38BDF8" font-size="10" font-weight="700">IMPLEMENTED</text>
+    <text x="65" y="21" fill="#CBD5E1" font-size="12" font-weight="600">Client UI (Next.js 16 App Router)</text>
+    <text x="20" y="60" fill="#F8FAFC" font-size="15" font-weight="700">Storefront &amp; Cart UI</text>
+    <text x="20" y="80" fill="#94A3B8" font-size="12">Cart Nav (/cart) &amp; Order Status Polling</text>
+    <rect x="20" y="90" width="130" height="18" rx="4" fill="#0EA5E9" fill-opacity="0.2"/>
+    <text x="26" y="103" fill="#38BDF8" font-size="10" font-weight="700">PROVED-SESSION AUTH</text>
   </g>
 
-  <!-- Core Component 2: Next.js App Router API -->
-  <g transform="translate(420, 245)">
-    <rect width="320" height="170" rx="12" fill="#1E293B" stroke="#0284C7" stroke-width="1.5"/>
-    <text x="20" y="32" fill="#38BDF8" font-size="16" font-weight="700">Next.js 16 App Router API</text>
-    <text x="20" y="55" fill="#E2E8F0" font-size="13">• Domain Logic &amp; Payment Gates</text>
-    <text x="20" y="75" fill="#E2E8F0" font-size="13">• Strict Lifecycle State Machine</text>
-    <text x="20" y="95" fill="#E2E8F0" font-size="13">• Stock Validation &amp; Mutations</text>
-    <text x="20" y="115" fill="#E2E8F0" font-size="13">• X-Automation-Secret Protection</text>
-    <rect x="20" y="132" width="90" height="20" rx="4" fill="#0EA5E9" fill-opacity="0.2"/>
-    <text x="26" y="146" fill="#38BDF8" font-size="10" font-weight="700">IMPLEMENTED</text>
+  <!-- Core Component 2: Next.js API Layer -->
+  <g transform="translate(420, 240)">
+    <rect width="320" height="175" rx="12" fill="#1E293B" stroke="#0284C7" stroke-width="1.5"/>
+    <text x="20" y="30" fill="#38BDF8" font-size="16" font-weight="700">Next.js 16 App Router API</text>
+    <text x="20" y="52" fill="#E2E8F0" font-size="12">• Stripe Webhook Signature Verification</text>
+    <text x="20" y="70" fill="#E2E8F0" font-size="12">• Internal API Authorization (Secret)</text>
+    <text x="20" y="88" fill="#E2E8F0" font-size="12">• /api/internal/events (Claim/Complete)</text>
+    <text x="20" y="106" fill="#E2E8F0" font-size="12">• /api/internal/orders/[id]/process</text>
+    <text x="20" y="124" fill="#E2E8F0" font-size="12">• /api/internal/notifications/email</text>
+    <rect x="20" y="140" width="120" height="20" rx="4" fill="#0EA5E9" fill-opacity="0.2"/>
+    <text x="26" y="154" fill="#38BDF8" font-size="10" font-weight="700">IDEMPOTENT HANDLERS</text>
   </g>
 
-  <!-- Core Component 3: Neon PostgreSQL -->
-  <g transform="translate(70, 480)">
-    <rect width="670" height="190" rx="14" fill="#0F172A" stroke="#10B981" stroke-width="2"/>
-    <text x="25" y="35" fill="#34D399" font-size="18" font-weight="800">Neon PostgreSQL (Prisma 8 Contract ORM)</text>
-    <text x="25" y="60" fill="#A7F3D0" font-size="13" font-weight="600">SINGLE AUTHORITATIVE BUSINESS SOURCE OF TRUTH</text>
+  <!-- Core Component 3: Neon PostgreSQL (Prisma 8) -->
+  <g transform="translate(70, 435)">
+    <rect width="670" height="250" rx="14" fill="#0F172A" stroke="#10B981" stroke-width="2"/>
+    <text x="25" y="32" fill="#34D399" font-size="18" font-weight="800">Neon PostgreSQL (Authoritative Storage)</text>
+    <text x="25" y="52" fill="#A7F3D0" font-size="12" font-weight="600">ATOMIC TRANSACTIONS &amp; IDEMPOTENCY STORE</text>
     
-    <rect x="25" y="75" width="190" height="90" rx="8" fill="#1E293B" stroke="#334155"/>
-    <text x="35" y="98" fill="#F8FAFC" font-size="13" font-weight="700">Domain Tables</text>
-    <text x="35" y="118" fill="#94A3B8" font-size="12">Order • OrderItem</text>
-    <text x="35" y="136" fill="#94A3B8" font-size="12">Product • Customer</text>
-    <text x="35" y="152" fill="#94A3B8" font-size="12">StripeEvent (PK Lock)</text>
+    <!-- Table Box 1: Business Domain -->
+    <rect x="25" y="65" width="190" height="170" rx="8" fill="#1E293B" stroke="#334155"/>
+    <text x="35" y="88" fill="#F8FAFC" font-size="13" font-weight="700">Domain Models</text>
+    <text x="35" y="108" fill="#94A3B8" font-size="12">Order (status, carrier)</text>
+    <text x="35" y="126" fill="#94A3B8" font-size="12">Product (stock, threshold)</text>
+    <text x="35" y="144" fill="#94A3B8" font-size="12">Customer (email, name)</text>
+    <text x="35" y="162" fill="#94A3B8" font-size="12">OrderItem</text>
+    <text x="35" y="180" fill="#94A3B8" font-size="12">StripeEvent (Idempotency)</text>
 
-    <rect x="235" y="75" width="410" height="90" rx="8" fill="#1E293B" stroke="#059669"/>
-    <text x="245" y="98" fill="#34D399" font-size="13" font-weight="700">Transactional Outbox Table (OutboxEvent)</text>
-    <text x="245" y="118" fill="#CBD5E1" font-size="12">Atomic DB Commits: PAYMENT_SUCCEEDED,</text>
-    <text x="245" y="136" fill="#CBD5E1" font-size="12">INVENTORY_UPDATED, ORDER_STATUS_UPDATED</text>
-    <text x="245" y="152" fill="#6EE7B7" font-size="11">Atomically persists business state and outbox events</text>
+    <!-- Table Box 2: Transactional Outbox -->
+    <rect x="230" y="65" width="205" height="170" rx="8" fill="#1E293B" stroke="#059669"/>
+    <text x="240" y="88" fill="#34D399" font-size="13" font-weight="700">Transactional Outbox</text>
+    <text x="240" y="108" fill="#CBD5E1" font-size="11">OutboxEvent Table:</text>
+    <text x="240" y="126" fill="#6EE7B7" font-size="11">• PAYMENT_SUCCEEDED</text>
+    <text x="240" y="144" fill="#6EE7B7" font-size="11">• INVENTORY_UPDATED</text>
+    <text x="240" y="162" fill="#6EE7B7" font-size="11">• ORDER_STATUS_UPDATED</text>
+    <text x="240" y="180" fill="#6EE7B7" font-size="11">• ORDER_*_NOTIFICATION</text>
+    <text x="240" y="200" fill="#CBD5E1" font-size="10">Atomic DB Commit with State</text>
+
+    <!-- Table Box 3: Consumer Deduplication -->
+    <rect x="450" y="65" width="195" height="170" rx="8" fill="#1E293B" stroke="#818CF8"/>
+    <text x="460" y="88" fill="#A78BFA" font-size="13" font-weight="700">Consumer Deduplication</text>
+    <text x="460" y="108" fill="#CBD5E1" font-size="11">ConsumerEvent Table:</text>
+    <text x="460" y="126" fill="#A5B4FC" font-size="11">• (consumerId, eventId)</text>
+    <text x="460" y="144" fill="#A5B4FC" font-size="11">• Two-Phase Claim / Complete</text>
+    <text x="460" y="162" fill="#A5B4FC" font-size="11">• Lease Expiry Recovery</text>
+    <text x="460" y="180" fill="#A5B4FC" font-size="11">• Duplicate Suppression</text>
+    <text x="460" y="200" fill="#CBD5E1" font-size="10">Prevents Double Execution</text>
   </g>
 
   <!-- Core Component 4: Outbox Engine -->
   <g transform="translate(70, 700)">
-    <rect width="670" height="130" rx="12" fill="#1E293B" stroke="#0EA5E9" stroke-width="1.5"/>
-    <text x="25" y="32" fill="#38BDF8" font-size="16" font-weight="700">Transactional Outbox Engine (src/lib/outbox.ts)</text>
-    <text x="25" y="55" fill="#E2E8F0" font-size="13">• Batch Event Dispatcher (POST /api/internal/outbox/process)</text>
-    <text x="25" y="75" fill="#E2E8F0" font-size="13">• 5-Minute Stale-Claim Lease Recovery (STALE_PROCESSING_LEASE_MS)</text>
-    <text x="25" y="95" fill="#E2E8F0" font-size="13">• Exponential Backoff (+1m, +5m, +15m, +60m, Max 5 Retries) &amp; Dead-Letter Queue</text>
+    <rect width="670" height="135" rx="12" fill="#1E293B" stroke="#0EA5E9" stroke-width="1.5"/>
+    <text x="25" y="30" fill="#38BDF8" font-size="16" font-weight="700">Transactional Outbox Engine (src/lib/outbox.ts)</text>
+    <text x="25" y="52" fill="#E2E8F0" font-size="12">• At-Least-Once Delivery to Dedicated n8n Webhooks</text>
+    <text x="25" y="70" fill="#E2E8F0" font-size="12">• Exponential Retry Backoff (+1m, +5m, +15m, +60m, Max 5 Retries)</text>
+    <text x="25" y="88" fill="#E2E8F0" font-size="12">• 5-Min Stale PROCESSING Lease Recovery (STALE_PROCESSING_LEASE_MS)</text>
+    <text x="25" y="106" fill="#E2E8F0" font-size="12">• Terminal FAILED Status for Exhausted Retries</text>
   </g>
 
   <!-- Right Region: AUTOMATION & INTEGRATION LAYER -->
@@ -104,90 +126,98 @@
   <text x="870" y="208" fill="#A5B4FC" font-size="13" font-weight="800" letter-spacing="1">AUTOMATION &amp; INTEGRATION LAYER</text>
 
   <!-- Integration 1: Stripe -->
-  <g transform="translate(855, 245)">
-    <rect width="320" height="110" rx="12" fill="#1E293B" stroke="#6366F1" stroke-width="1.5"/>
-    <text x="20" y="32" fill="#818CF8" font-size="16" font-weight="700">Stripe Payments &amp; Webhooks</text>
-    <text x="20" y="55" fill="#E2E8F0" font-size="13">• Hosted Checkout Session API</text>
-    <text x="20" y="75" fill="#E2E8F0" font-size="13">• Raw Body Signature Verification</text>
-    <rect x="20" y="82" width="90" height="18" rx="4" fill="#6366F1" fill-opacity="0.2"/>
-    <text x="26" y="95" fill="#A5B4FC" font-size="10" font-weight="700">IMPLEMENTED</text>
+  <g transform="translate(855, 240)">
+    <rect width="320" height="115" rx="12" fill="#1E293B" stroke="#6366F1" stroke-width="1.5"/>
+    <text x="20" y="30" fill="#818CF8" font-size="16" font-weight="700">Stripe Payments Gateway</text>
+    <text x="20" y="52" fill="#E2E8F0" font-size="12">• Hosted Checkout Session API</text>
+    <text x="20" y="70" fill="#E2E8F0" font-size="12">• Raw Body Signature Verification</text>
+    <rect x="20" y="85" width="130" height="18" rx="4" fill="#6366F1" fill-opacity="0.2"/>
+    <text x="26" y="98" fill="#A5B4FC" font-size="10" font-weight="700">STRIPE TEST MODE E2E</text>
   </g>
 
   <!-- Integration 2: Resend -->
-  <g transform="translate(1200, 245)">
-    <rect width="330" height="110" rx="12" fill="#1E293B" stroke="#E11D48" stroke-width="1.5"/>
-    <text x="20" y="32" fill="#FB7185" font-size="16" font-weight="700">Resend Transactional Email</text>
-    <text x="20" y="55" fill="#E2E8F0" font-size="13">• Server-Side Customer Emails</text>
-    <text x="20" y="75" fill="#E2E8F0" font-size="13">• Processing, Shipping, Delivery</text>
-    <rect x="20" y="82" width="90" height="18" rx="4" fill="#E11D48" fill-opacity="0.2"/>
-    <text x="26" y="95" fill="#FB7185" font-size="10" font-weight="700">IMPLEMENTED</text>
+  <g transform="translate(1200, 240)">
+    <rect width="330" height="115" rx="12" fill="#1E293B" stroke="#E11D48" stroke-width="1.5"/>
+    <text x="20" y="30" fill="#FB7185" font-size="16" font-weight="700">Resend Email API</text>
+    <text x="20" y="52" fill="#E2E8F0" font-size="12">• Durable HTML Email Dispatch</text>
+    <text x="20" y="70" fill="#E2E8F0" font-size="12">• Idempotency-Key: eventId</text>
+    <rect x="20" y="85" width="140" height="18" rx="4" fill="#E11D48" fill-opacity="0.2"/>
+    <text x="26" y="98" fill="#FB7185" font-size="10" font-weight="700">PROVIDER IDEMPOTENCY</text>
   </g>
 
-  <!-- Integration 3: n8n Engine -->
-  <g transform="translate(855, 385)">
-    <rect width="675" height="230" rx="16" fill="#0F172A" stroke="#FF6D5A" stroke-width="2"/>
-    <text x="25" y="35" fill="#FF6D5A" font-size="20" font-weight="800">n8n Orchestration Engine (Docker Container)</text>
-    <text x="25" y="58" fill="#F8FAFC" font-size="14">Workflow Automation &amp; External Integration Dispatcher</text>
+  <!-- Integration 3: n8n Engine (7 Workflows) -->
+  <g transform="translate(855, 375)">
+    <rect width="675" height="250" rx="16" fill="#0F172A" stroke="#FF6D5A" stroke-width="2"/>
+    <text x="25" y="32" fill="#FF6D5A" font-size="18" font-weight="800">n8n Orchestration Engine (7 Production Workflows)</text>
+    <text x="25" y="52" fill="#F8FAFC" font-size="13">Event Routing, Business Automation &amp; Reliability Dispatcher</text>
 
-    <!-- n8n Workflow Boxes -->
-    <rect x="25" y="75" width="200" height="130" rx="10" fill="#1E293B" stroke="#334155"/>
-    <text x="35" y="98" fill="#F8FAFC" font-size="13" font-weight="700">Order Orchestration</text>
-    <text x="35" y="118" fill="#94A3B8" font-size="12">• Stock Branching</text>
-    <text x="35" y="136" fill="#94A3B8" font-size="12">• Auto-Fulfillment</text>
-    <text x="35" y="154" fill="#94A3B8" font-size="12">• Exception Handling</text>
+    <!-- Workflow Box 1 -->
+    <rect x="25" y="65" width="200" height="165" rx="10" fill="#1E293B" stroke="#334155"/>
+    <text x="35" y="88" fill="#F8FAFC" font-size="12" font-weight="700">Fulfillment &amp; Status</text>
+    <text x="35" y="106" fill="#94A3B8" font-size="11">• Payment Orchestration</text>
+    <text x="35" y="122" fill="#94A3B8" font-size="11">• Order Status Fan-Out</text>
+    <text x="35" y="138" fill="#94A3B8" font-size="11">• Shipping &amp; Delivery</text>
+    <text x="35" y="154" fill="#94A3B8" font-size="11">• Process / Claim Calls</text>
+    <text x="35" y="174" fill="#38BDF8" font-size="10" font-weight="700">ConsumerEvent Claims</text>
 
-    <rect x="240" y="75" width="200" height="130" rx="10" fill="#1E293B" stroke="#334155"/>
-    <text x="250" y="98" fill="#F8FAFC" font-size="13" font-weight="700">Inventory Monitor</text>
-    <text x="250" y="118" fill="#94A3B8" font-size="12">• Threshold Checking</text>
-    <text x="250" y="136" fill="#94A3B8" font-size="12">• LOW_STOCK Filter</text>
-    <text x="250" y="154" fill="#94A3B8" font-size="12">• Discord Alerts</text>
+    <!-- Workflow Box 2 -->
+    <rect x="240" y="65" width="200" height="165" rx="10" fill="#1E293B" stroke="#334155"/>
+    <text x="250" y="88" fill="#F8FAFC" font-size="12" font-weight="700">CRM &amp; Inventory</text>
+    <text x="250" y="106" fill="#94A3B8" font-size="11">• Customer Lifecycle CRM</text>
+    <text x="250" y="122" fill="#94A3B8" font-size="11">• Low-Stock Inventory</text>
+    <text x="250" y="138" fill="#94A3B8" font-size="11">• Contact / Deal Upserts</text>
+    <text x="250" y="154" fill="#94A3B8" font-size="11">• Discord Inventory Alert</text>
+    <text x="250" y="174" fill="#A78BFA" font-size="10" font-weight="700">HubSpot + Discord</text>
 
-    <rect x="455" y="75" width="200" height="130" rx="10" fill="#1E293B" stroke="#334155"/>
-    <text x="465" y="98" fill="#F8FAFC" font-size="13" font-weight="700">HubSpot CRM Sync</text>
-    <text x="465" y="118" fill="#94A3B8" font-size="12">• Contact Upsert</text>
-    <text x="465" y="136" fill="#94A3B8" font-size="12">• Deal Creation</text>
-    <text x="465" y="154" fill="#94A3B8" font-size="12">• Lifecycle Updates</text>
+    <!-- Workflow Box 3 -->
+    <rect x="455" y="65" width="200" height="165" rx="10" fill="#1E293B" stroke="#334155"/>
+    <text x="465" y="88" fill="#F8FAFC" font-size="12" font-weight="700">Emails &amp; Monitor</text>
+    <text x="465" y="106" fill="#94A3B8" font-size="11">• Email Dispatcher</text>
+    <text x="465" y="122" fill="#94A3B8" font-size="11">• Reliability Monitor</text>
+    <text x="465" y="138" fill="#94A3B8" font-size="11">• FAILED Events Alert</text>
+    <text x="465" y="154" fill="#94A3B8" font-size="11">• Anti-Starvation (Max 5)</text>
+    <text x="465" y="174" fill="#FB7185" font-size="10" font-weight="700">Durable Dispatch</text>
   </g>
 
   <!-- Integration 4: HubSpot & Discord Targets -->
   <g transform="translate(855, 645)">
     <rect width="320" height="185" rx="12" fill="#1E293B" stroke="#FF7A59" stroke-width="1.5"/>
-    <text x="20" y="32" fill="#FF7A59" font-size="16" font-weight="700">HubSpot CRM Synchronization</text>
-    <text x="20" y="55" fill="#E2E8F0" font-size="13">• Contact Identity = Email</text>
-    <text x="20" y="75" fill="#E2E8F0" font-size="13">• Deal Identity = orderId</text>
-    <text x="20" y="95" fill="#E2E8F0" font-size="13">• Downstream Lifecycle Projection</text>
-    <text x="20" y="115" fill="#E2E8F0" font-size="13">• On-Demand PII Context Fetch</text>
-    <rect x="20" y="145" width="200" height="22" rx="4" fill="#FF7A59" fill-opacity="0.2"/>
-    <text x="26" y="160" fill="#FF7A59" font-size="10" font-weight="700">n8n INTEGRATION READY</text>
+    <text x="20" y="30" fill="#FF7A59" font-size="16" font-weight="700">HubSpot CRM Integration</text>
+    <text x="20" y="52" fill="#E2E8F0" font-size="12">• Contact Identity = Email</text>
+    <text x="20" y="70" fill="#E2E8F0" font-size="12">• Deal Identity = external_order_id</text>
+    <text x="20" y="88" fill="#E2E8F0" font-size="12">• Contact ↔ Deal Association</text>
+    <text x="20" y="106" fill="#E2E8F0" font-size="12">• Stages: Processing/Shipped/Delivered</text>
+    <rect x="20" y="140" width="180" height="22" rx="4" fill="#FF7A59" fill-opacity="0.2"/>
+    <text x="26" y="155" fill="#FF7A59" font-size="10" font-weight="700">HUBSPOT REST API</text>
   </g>
 
   <g transform="translate(1200, 645)">
     <rect width="330" height="185" rx="12" fill="#1E293B" stroke="#5865F2" stroke-width="1.5"/>
-    <text x="20" y="32" fill="#818CF8" font-size="16" font-weight="700">Discord Operations Alerts</text>
-    <text x="20" y="55" fill="#E2E8F0" font-size="13">• Low Stock Threshold Alerts</text>
-    <text x="20" y="75" fill="#E2E8F0" font-size="13">• Outbox Dead-Letter Alerts</text>
-    <text x="20" y="95" fill="#E2E8F0" font-size="13">• PII Isolation (No Customer PII)</text>
-    <text x="20" y="115" fill="#E2E8F0" font-size="13">• Real-time Team Notifications</text>
-    <rect x="20" y="145" width="200" height="22" rx="4" fill="#5865F2" fill-opacity="0.2"/>
-    <text x="26" y="160" fill="#818CF8" font-size="10" font-weight="700">n8n INTEGRATION READY</text>
+    <text x="20" y="30" fill="#818CF8" font-size="16" font-weight="700">Discord Operations Alerts</text>
+    <text x="20" y="52" fill="#E2E8F0" font-size="12">• Low-Stock Threshold Alerts</text>
+    <text x="20" y="70" fill="#E2E8F0" font-size="12">• Shipping &amp; Tracking Alerts</text>
+    <text x="20" y="88" fill="#E2E8F0" font-size="12">• Persistent Outbox Failure Alerts</text>
+    <text x="20" y="106" fill="#E2E8F0" font-size="12">• Deduplicated via ConsumerEvent</text>
+    <rect x="20" y="140" width="180" height="22" rx="4" fill="#5865F2" fill-opacity="0.2"/>
+    <text x="26" y="155" fill="#818CF8" font-size="10" font-weight="700">DISCORD WEBHOOKS</text>
   </g>
 
   <!-- Connectors / Arrows -->
   <!-- UI to App API -->
-  <path d="M 380 300 L 420 300" stroke="#38BDF8" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <path d="M 380 295 L 420 295" stroke="#38BDF8" stroke-width="2.5" marker-end="url(#arrow)"/>
   <!-- App API to DB -->
-  <path d="M 580 415 L 580 480" stroke="#34D399" stroke-width="2.5" marker-end="url(#arrow-emerald)"/>
+  <path d="M 580 415 L 580 435" stroke="#34D399" stroke-width="2.5" marker-end="url(#arrow-emerald)"/>
   <!-- DB Outbox to Outbox Engine -->
-  <path d="M 400 670 L 400 700" stroke="#38BDF8" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <path d="M 400 685 L 400 700" stroke="#38BDF8" stroke-width="2.5" marker-end="url(#arrow)"/>
   <!-- Outbox Engine to n8n -->
   <path d="M 740 765 L 790 765 L 790 500 L 855 500" stroke="#38BDF8" stroke-width="2.5" marker-end="url(#arrow)"/>
   <!-- n8n to HubSpot -->
-  <path d="M 1015 615 L 1015 645" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arrow-purple)"/>
+  <path d="M 1015 625 L 1015 645" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arrow-purple)"/>
   <!-- n8n to Discord -->
-  <path d="M 1365 615 L 1365 645" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arrow-purple)"/>
+  <path d="M 1365 625 L 1365 645" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arrow-purple)"/>
   <!-- App API to Resend -->
-  <path d="M 740 300 L 800 300 L 800 130 L 1365 130 L 1365 245" stroke="#FB7185" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrow)"/>
-  <!-- n8n back to Next.js CRM Context API -->
-  <path d="M 855 450 L 770 450 L 770 330 L 740 330" stroke="#F59E0B" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrow)"/>
+  <path d="M 740 295 L 800 295 L 800 130 L 1365 130 L 1365 240" stroke="#FB7185" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrow-rose)"/>
+  <!-- n8n back to Next.js API -->
+  <path d="M 855 450 L 770 450 L 770 325 L 740 325" stroke="#F59E0B" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrow)"/>
 
 </svg>

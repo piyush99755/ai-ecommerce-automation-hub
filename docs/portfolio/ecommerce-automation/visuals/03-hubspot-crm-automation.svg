@@ -20,27 +20,27 @@
 
   <!-- Header Bar -->
   <rect x="40" y="40" width="1520" height="90" rx="16" fill="#1E293B" stroke="#334155" stroke-width="1.5"/>
-  <text x="70" y="82" fill="#F8FAFC" font-size="28" font-weight="800" letter-spacing="-0.5">HubSpot CRM Automation Workflow</text>
-  <text x="70" y="110" fill="#94A3B8" font-size="15" font-weight="500">Privacy-Preserving PII Isolation, Protected On-Demand Context Retrieval, and Idempotent Downstream Sync</text>
+  <text x="70" y="82" fill="#F8FAFC" font-size="28" font-weight="800" letter-spacing="-0.5">HubSpot CRM Lifecycle Automation Workflow</text>
+  <text x="70" y="110" fill="#94A3B8" font-size="15" font-weight="500">Dual Fan-Out Ingress Paths, Two-Phase Consumer Deduplication, and Deal Stage Lifecycle Updates</text>
   
   <!-- Status Badge -->
-  <rect x="1350" y="65" width="180" height="38" rx="8" fill="#FEF3C7" fill-opacity="0.1" stroke="#F59E0B" stroke-width="1.5"/>
-  <circle cx="1370" cy="84" r="5" fill="#F59E0B"/>
-  <text x="1385" y="89" fill="#FBBF24" font-size="13" font-weight="700" letter-spacing="0.5">IN DEVELOPMENT</text>
+  <rect x="1350" y="65" width="180" height="38" rx="8" fill="#10B981" fill-opacity="0.15" stroke="#34D399" stroke-width="1.5"/>
+  <circle cx="1370" cy="84" r="5" fill="#34D399"/>
+  <text x="1385" y="89" fill="#34D399" font-size="13" font-weight="800" letter-spacing="0.5">E2E VERIFIED</text>
 
   <!-- High-Level Invariant Badges -->
   <g transform="translate(40, 155)">
     <rect width="360" height="42" rx="8" fill="#059669" fill-opacity="0.15" stroke="#34D399" stroke-width="1"/>
-    <text x="15" y="26" fill="#34D399" font-size="13" font-weight="700">✓ PostgreSQL Authoritative Source of Truth</text>
+    <text x="15" y="26" fill="#34D399" font-size="13" font-weight="700">✓ Ingress: PAYMENT_SUCCEEDED &amp; ORDER_STATUS_UPDATED</text>
 
-    <rect x="380" width="370" height="42" rx="8" fill="#0284C7" fill-opacity="0.15" stroke="#38BDF8" stroke-width="1"/>
-    <text x="395" y="26" fill="#38BDF8" font-size="13" font-weight="700">✓ Outbox Payloads Exclude Raw PII (IDs Only)</text>
+    <rect x="380" width="370" height="42" rx="8" fill="#7C3AED" fill-opacity="0.15" stroke="#A78BFA" stroke-width="1"/>
+    <text x="395" y="26" fill="#A78BFA" font-size="13" font-weight="700">✓ Deduplication: ConsumerEvent (hubspot-crm-sync)</text>
 
     <rect x="770" width="370" height="42" rx="8" fill="#D97706" fill-opacity="0.15" stroke="#FBBF24" stroke-width="1"/>
     <text x="785" y="26" fill="#FBBF24" font-size="13" font-weight="700">✓ Protected Context API (/crm-context)</text>
 
     <rect x="1160" width="400" height="42" rx="8" fill="#EA580C" fill-opacity="0.15" stroke="#FF7A59" stroke-width="1"/>
-    <text x="1175" y="26" fill="#FF7A59" font-size="13" font-weight="700">✓ Contact Identity (Email) &amp; Deal (orderId)</text>
+    <text x="1175" y="26" fill="#FF7A59" font-size="13" font-weight="700">✓ Deal Stage Lifecycle (Processing/Shipped/Delivered)</text>
   </g>
 
   <!-- Main Architecture Containers -->
@@ -50,12 +50,12 @@
   <rect x="65" y="255" width="340" height="32" rx="6" fill="#0369A1" fill-opacity="0.3"/>
   <text x="75" y="276" fill="#38BDF8" font-size="13" font-weight="800" letter-spacing="0.5">CORE BACKEND &amp; TRANSACTIONAL OUTBOX</text>
 
-  <!-- Step 1: Business Events -->
+  <!-- Step 1: Business Events & Dual Ingress -->
   <g transform="translate(65, 305)">
     <rect width="550" height="110" rx="10" fill="#0F172A" stroke="#334155"/>
-    <text x="20" y="30" fill="#F8FAFC" font-size="15" font-weight="700">1. Domain State Mutation</text>
-    <text x="20" y="52" fill="#94A3B8" font-size="13">• Payment Succeeded: <tspan fill="#34D399" font-weight="600">paymentStatus = PAID</tspan></text>
-    <text x="20" y="72" fill="#94A3B8" font-size="13">• Order Status Updated: <tspan fill="#38BDF8" font-weight="600">status = PROCESSING / SHIPPED / DELIVERED</tspan></text>
+    <text x="20" y="30" fill="#F8FAFC" font-size="15" font-weight="700">1. Dual Ingress Invariant Events</text>
+    <text x="20" y="52" fill="#94A3B8" font-size="13">• Path A: <tspan fill="#34D399" font-weight="700">PAYMENT_SUCCEEDED</tspan> Outbox Event</text>
+    <text x="20" y="72" fill="#94A3B8" font-size="13">• Path B: <tspan fill="#38BDF8" font-weight="700">ORDER_STATUS_UPDATED</tspan> Outbox Event (Shipped/Delivered)</text>
     <text x="20" y="92" fill="#94A3B8" font-size="12">Committed atomically inside db.transaction in Neon PostgreSQL</text>
   </g>
 
@@ -63,26 +63,26 @@
   <g transform="translate(65, 435)">
     <rect width="550" height="150" rx="10" fill="#0F172A" stroke="#34D399"/>
     <text x="20" y="30" fill="#34D399" font-size="15" font-weight="700">2. Minimal Outbox Event Record (OutboxEvent)</text>
-    <text x="20" y="52" fill="#CBD5E1" font-size="13">PII-Minimized Event Payload:</text>
+    <text x="20" y="52" fill="#CBD5E1" font-size="13">PII-Minimized Event Payload (IDs &amp; Event Metadata Only):</text>
     
     <rect x="20" y="62" width="510" height="70" rx="6" fill="#1E293B" stroke="#334155"/>
-    <text x="30" y="84" fill="#F8FAFC" font-size="12" font-family="monospace">{ "eventId": "evt_123", "event": "PAYMENT_SUCCEEDED",</text>
-    <text x="30" y="104" fill="#F8FAFC" font-size="12" font-family="monospace">  "orderId": "ord_999", "customerId": "cust_888" }</text>
-    <text x="30" y="122" fill="#34D399" font-size="11" font-weight="600">✓ Excludes raw customer email/phone from generic outbox payloads</text>
+    <text x="30" y="84" fill="#F8FAFC" font-size="12" font-family="monospace">{ "eventId": "evt_123", "eventType": "ORDER_STATUS_UPDATED",</text>
+    <text x="30" y="104" fill="#F8FAFC" font-size="12" font-family="monospace">  "orderId": "ord_999", "status": "SHIPPED" }</text>
+    <text x="30" y="122" fill="#34D399" font-size="11" font-weight="600">✓ Excludes customer email/phone from outbox payload envelope</text>
   </g>
 
   <!-- Step 3: Protected Context Endpoint -->
   <g transform="translate(65, 605)">
     <rect width="550" height="215" rx="10" fill="#0F172A" stroke="#F59E0B" stroke-width="1.5"/>
     <text x="20" y="30" fill="#FBBF24" font-size="15" font-weight="700">3. Protected CRM Context API Endpoint</text>
-    <text x="20" y="50" fill="#94A3B8" font-size="13">GET /api/internal/orders/[id]/crm-context (Protected by X-Automation-Secret)</text>
+    <text x="20" y="50" fill="#94A3B8" font-size="13">GET /api/internal/orders/[id]/crm-context (Protected by Secret)</text>
 
     <rect x="20" y="62" width="510" height="135" rx="6" fill="#1E293B" stroke="#334155"/>
     <text x="30" y="82" fill="#FBBF24" font-size="12" font-weight="700">Sanitized On-Demand Context Response (200 OK):</text>
     <text x="30" y="100" fill="#CBD5E1" font-size="11" font-family="monospace">{ orderId, customerId, totalCents, paymentStatus,</text>
     <text x="30" y="116" fill="#CBD5E1" font-size="11" font-family="monospace">  status, carrier, trackingNumber,</text>
     <text x="30" y="132" fill="#CBD5E1" font-size="11" font-family="monospace">  customer: { name, email } }</text>
-    <text x="30" y="180" fill="#FBBF24" font-size="11" font-weight="600">✓ Read-only execution with zero DB mutations &amp; zero secret leaks</text>
+    <text x="30" y="180" fill="#FBBF24" font-size="11" font-weight="600">✓ On-demand context fetch with zero secret leakage</text>
   </g>
 
   <!-- Box 2: n8n ORCHESTRATION & HUBSPOT SYNC -->
@@ -93,10 +93,10 @@
   <!-- n8n Workflow Step 1: Webhook & Dedupe -->
   <g transform="translate(715, 305)">
     <rect width="820" height="120" rx="10" fill="#0F172A" stroke="#FF6D5A"/>
-    <text x="20" y="30" fill="#FF6D5A" font-size="15" font-weight="700">4. n8n Event Webhook &amp; Idempotency Check</text>
-    <text x="20" y="52" fill="#CBD5E1" font-size="13">• Receives event payload with stable <tspan fill="#38BDF8" font-weight="700">eventId</tspan></text>
-    <text x="20" y="72" fill="#CBD5E1" font-size="13">• Uses stable <tspan fill="#38BDF8" font-weight="700">eventId</tspan> for idempotent downstream processing</text>
-    <text x="20" y="92" fill="#CBD5E1" font-size="13">• Prevents duplicate CRM updates during outbox retries</text>
+    <text x="20" y="30" fill="#FF6D5A" font-size="15" font-weight="700">4. n8n Ingress Fan-Out &amp; ConsumerEvent Claim</text>
+    <text x="20" y="52" fill="#CBD5E1" font-size="13">• Triggered by Payment Orchestration OR Order Status Fan-Out</text>
+    <text x="20" y="72" fill="#CBD5E1" font-size="13">• Calls <tspan fill="#A78BFA" font-weight="700">POST /api/internal/events/claim</tspan> (consumerId: <tspan fill="#A78BFA" font-weight="700">hubspot-crm-sync</tspan>)</text>
+    <text x="20" y="92" fill="#CBD5E1" font-size="13">• If status === COMPLETED $\rightarrow$ suppresses duplicate CRM mutations</text>
   </g>
 
   <!-- n8n Workflow Step 2: Context Retrieval -->
@@ -131,15 +131,15 @@
     <text x="15" y="22" fill="#FF7A59" font-size="13" font-weight="800">7. HUBSPOT DEAL UPSERT &amp; STAGE</text>
     
     <text x="15" y="58" fill="#F8FAFC" font-size="14" font-weight="700">Deal Identity &amp; Lifecycle Stage:</text>
-    <text x="15" y="80" fill="#E2E8F0" font-size="13">• Deal Primary Key = <tspan fill="#FF7A59" font-weight="700">orderId</tspan></text>
+    <text x="15" y="80" fill="#E2E8F0" font-size="13">• Deal Primary Key = <tspan fill="#FF7A59" font-weight="700">external_order_id</tspan></text>
     
     <rect x="15" y="98" width="375" height="145" rx="6" fill="#1E293B" stroke="#334155"/>
     <text x="25" y="120" fill="#FF7A59" font-size="12" font-weight="700">Lifecycle Stage Mapping:</text>
-    <text x="25" y="140" fill="#CBD5E1" font-size="12">• PAYMENT_SUCCEEDED $\rightarrow$ <tspan fill="#34D399" font-weight="700">PAID_CUSTOMER</tspan></text>
-    <text x="25" y="160" fill="#CBD5E1" font-size="12">• ORDER_STATUS_UPDATED $\rightarrow$ <tspan fill="#38BDF8" font-weight="700">PROCESSING</tspan></text>
-    <text x="25" y="180" fill="#CBD5E1" font-size="12">• Status = SHIPPED $\rightarrow$ <tspan fill="#818CF8" font-weight="700">SHIPPED</tspan></text>
-    <text x="25" y="200" fill="#CBD5E1" font-size="12">• Status = DELIVERED $\rightarrow$ <tspan fill="#34D399" font-weight="700">DELIVERED</tspan></text>
-    <text x="25" y="225" fill="#FF7A59" font-size="11" font-weight="600">[n8n HUBSPOT SYNC READY]</text>
+    <text x="25" y="140" fill="#CBD5E1" font-size="12">• PAYMENT_SUCCEEDED $\rightarrow$ <tspan fill="#34D399" font-weight="700">Processing</tspan></text>
+    <text x="25" y="160" fill="#CBD5E1" font-size="12">• ORDER_STATUS_UPDATED $\rightarrow$ <tspan fill="#38BDF8" font-weight="700">Processing</tspan></text>
+    <text x="25" y="180" fill="#CBD5E1" font-size="12">• Status = SHIPPED $\rightarrow$ <tspan fill="#818CF8" font-weight="700">Shipped</tspan></text>
+    <text x="25" y="200" fill="#CBD5E1" font-size="12">• Status = DELIVERED $\rightarrow$ <tspan fill="#34D399" font-weight="700">Closed Won / Delivered</tspan></text>
+    <text x="25" y="225" fill="#FF7A59" font-size="11" font-weight="600">[HUBSPOT REST API INTEGRATED]</text>
   </g>
 
   <!-- Connectors / Arrows -->

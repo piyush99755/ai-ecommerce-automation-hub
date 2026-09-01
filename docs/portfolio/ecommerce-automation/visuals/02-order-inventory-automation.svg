@@ -10,8 +10,8 @@
     <marker id="arr-purple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
       <path d="M 0 1 L 10 5 L 0 9 z" fill="#A78BFA"/>
     </marker>
-    <marker id="arr-red" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M 0 1 L 10 5 L 0 9 z" fill="#F87171"/>
+    <marker id="arr-amber" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#FBBF24"/>
     </marker>
   </defs>
 
@@ -20,13 +20,13 @@
 
   <!-- Header Bar -->
   <rect x="40" y="40" width="1520" height="90" rx="16" fill="#1E293B" stroke="#334155" stroke-width="1.5"/>
-  <text x="70" y="82" fill="#F8FAFC" font-size="28" font-weight="800" letter-spacing="-0.5">Order Fulfillment &amp; Inventory Automation Lifecycle</text>
-  <text x="70" y="110" fill="#94A3B8" font-size="15" font-weight="500">Atomic Database Transactions, Payment Gates, and Transactional Outbox Retries</text>
+  <text x="70" y="82" fill="#F8FAFC" font-size="28" font-weight="800" letter-spacing="-0.5">Order Fulfillment &amp; Atomic Inventory Lifecycle</text>
+  <text x="70" y="110" fill="#94A3B8" font-size="15" font-weight="500">Atomic Stock Decrements, Payment Gates, Consumer Claims &amp; Low-Stock Threshold Alerts</text>
   
   <!-- Status Badge -->
-  <rect x="1350" y="65" width="180" height="38" rx="8" fill="#FEF3C7" fill-opacity="0.1" stroke="#F59E0B" stroke-width="1.5"/>
-  <circle cx="1370" cy="84" r="5" fill="#F59E0B"/>
-  <text x="1385" y="89" fill="#FBBF24" font-size="13" font-weight="700" letter-spacing="0.5">IN DEVELOPMENT</text>
+  <rect x="1350" y="65" width="180" height="38" rx="8" fill="#10B981" fill-opacity="0.15" stroke="#34D399" stroke-width="1.5"/>
+  <circle cx="1370" cy="84" r="5" fill="#34D399"/>
+  <text x="1385" y="89" fill="#34D399" font-size="13" font-weight="800" letter-spacing="0.5">E2E VERIFIED</text>
 
   <!-- High-Level Invariant Badges -->
   <g transform="translate(40, 155)">
@@ -34,13 +34,13 @@
     <text x="15" y="26" fill="#38BDF8" font-size="13" font-weight="700">✓ Unpaid Orders Blocked (paymentStatus = PAID)</text>
 
     <rect x="380" width="370" height="42" rx="8" fill="#059669" fill-opacity="0.15" stroke="#34D399" stroke-width="1"/>
-    <text x="395" y="26" fill="#34D399" font-size="13" font-weight="700">✓ Stock Mutated &amp; Outbox Committed Atomically</text>
+    <text x="395" y="26" fill="#34D399" font-size="13" font-weight="700">✓ Atomic SQL Conditional Decrement (stock &gt;= qty)</text>
 
     <rect x="770" width="370" height="42" rx="8" fill="#7C3AED" fill-opacity="0.15" stroke="#A78BFA" stroke-width="1"/>
-    <text x="785" y="26" fill="#A78BFA" font-size="13" font-weight="700">✓ Outbox Engine with 5-Min Lease Recovery</text>
+    <text x="785" y="26" fill="#A78BFA" font-size="13" font-weight="700">✓ Two-Phase Consumer Deduplication (ConsumerEvent)</text>
 
     <rect x="1160" width="400" height="42" rx="8" fill="#D97706" fill-opacity="0.15" stroke="#FBBF24" stroke-width="1"/>
-    <text x="1175" y="26" fill="#FBBF24" font-size="13" font-weight="700">✓ Post-Commit Email &amp; Low-Stock Alerts</text>
+    <text x="1175" y="26" fill="#FBBF24" font-size="13" font-weight="700">✓ Single-Execution Guard (alreadyProcessed: true)</text>
   </g>
 
   <!-- ROW 1: Order Creation to Payment Gate (Top Flow) -->
@@ -57,9 +57,9 @@
     <text x="30" y="130" fill="#CBD5E1" font-size="12" font-weight="600">Database Record Created:</text>
     <text x="30" y="150" fill="#94A3B8" font-size="12">• Order.status = <tspan fill="#F59E0B" font-weight="700">PENDING</tspan></text>
     <text x="30" y="168" fill="#94A3B8" font-size="12">• Order.paymentStatus = <tspan fill="#F59E0B" font-weight="700">PENDING</tspan></text>
-    <text x="30" y="186" fill="#94A3B8" font-size="12">• Subtotal &amp; Total calculated from DB</text>
-    <text x="30" y="204" fill="#94A3B8" font-size="12">• Inventory snapshot verified</text>
-    <text x="30" y="222" fill="#38BDF8" font-size="11" font-weight="700">[IMPLEMENTED]</text>
+    <text x="30" y="186" fill="#94A3B8" font-size="12">• Authoritative Pricing from DB Product</text>
+    <text x="30" y="204" fill="#94A3B8" font-size="12">• Stock availability checked</text>
+    <text x="30" y="222" fill="#38BDF8" font-size="11" font-weight="700">[STOREFRONT INTEGRATED]</text>
   </g>
 
   <!-- Step 2: Stripe Checkout -->
@@ -71,12 +71,12 @@
     <text x="20" y="88" fill="#94A3B8" font-size="13">Endpoint: POST /api/orders/[id]/checkout-session</text>
     
     <rect x="20" y="105" width="310" height="135" rx="8" fill="#0F172A" stroke="#334155"/>
-    <text x="30" y="130" fill="#CBD5E1" font-size="12" font-weight="600">Stripe Integration Details:</text>
-    <text x="30" y="150" fill="#94A3B8" font-size="12">• Generates Stripe Hosted Session URL</text>
-    <text x="30" y="168" fill="#94A3B8" font-size="12">• Reuses active sessions (session reuse)</text>
-    <text x="30" y="186" fill="#94A3B8" font-size="12">• Line items build from OrderItem DB</text>
-    <text x="30" y="204" fill="#94A3B8" font-size="12">• Persists stripeCheckoutSessionId</text>
-    <text x="30" y="222" fill="#818CF8" font-size="11" font-weight="700">[IMPLEMENTED]</text>
+    <text x="30" y="130" fill="#CBD5E1" font-size="12" font-weight="600">Stripe Checkout Details:</text>
+    <text x="30" y="150" fill="#94A3B8" font-size="12">• Hosted Checkout Session URL generated</text>
+    <text x="30" y="168" fill="#94A3B8" font-size="12">• Persists stripeCheckoutSessionId</text>
+    <text x="30" y="186" fill="#94A3B8" font-size="12">• Required proof for status polling</text>
+    <text x="30" y="204" fill="#94A3B8" font-size="12">• Customer completes payment</text>
+    <text x="30" y="222" fill="#818CF8" font-size="11" font-weight="700">[STRIPE TEST MODE]</text>
   </g>
 
   <!-- Step 3: Verified Webhook -->
@@ -84,33 +84,33 @@
     <rect width="360" height="260" rx="14" fill="#1E293B" stroke="#10B981" stroke-width="2"/>
     <rect width="360" height="38" rx="14" fill="#059669" fill-opacity="0.2"/>
     <text x="20" y="25" fill="#34D399" font-size="14" font-weight="800">3. VERIFIED STRIPE WEBHOOK</text>
-    <text x="20" y="65" fill="#F8FAFC" font-size="16" font-weight="700">Raw Body Verification &amp; PK Lock</text>
+    <text x="20" y="65" fill="#F8FAFC" font-size="16" font-weight="700">Signature Verification &amp; Outbox</text>
     <text x="20" y="88" fill="#94A3B8" font-size="13">Endpoint: POST /api/webhooks/stripe</text>
     
     <rect x="20" y="105" width="320" height="135" rx="8" fill="#0F172A" stroke="#059669"/>
     <text x="30" y="128" fill="#34D399" font-size="12" font-weight="700">Atomic Database Transaction:</text>
-    <text x="30" y="146" fill="#E2E8F0" font-size="12">1. Verifies Stripe webhook signature using raw request body</text>
-    <text x="30" y="164" fill="#E2E8F0" font-size="12">2. Inserts StripeEvent.id (PK Dedupe)</text>
+    <text x="30" y="146" fill="#E2E8F0" font-size="12">1. Verifies Stripe-Signature raw body</text>
+    <text x="30" y="164" fill="#E2E8F0" font-size="12">2. Inserts StripeEvent (PK Dedupe)</text>
     <text x="30" y="182" fill="#E2E8F0" font-size="12">3. Updates <tspan fill="#34D399" font-weight="700">paymentStatus = PAID</tspan></text>
-    <text x="30" y="200" fill="#E2E8F0" font-size="12">4. Atomically creates <tspan fill="#38BDF8" font-weight="700">PAYMENT_SUCCEEDED</tspan></text>
-    <text x="30" y="218" fill="#34D399" font-size="11" font-weight="700">[IMPLEMENTED]</text>
+    <text x="30" y="200" fill="#E2E8F0" font-size="12">4. Creates <tspan fill="#38BDF8" font-weight="700">PAYMENT_SUCCEEDED</tspan> Outbox</text>
+    <text x="30" y="218" fill="#34D399" font-size="11" font-weight="700">[ATOMIC DB COMMIT]</text>
   </g>
 
   <!-- Step 4: Fulfillment Payment Gate -->
   <g transform="translate(1210, 230)">
     <rect width="350" height="260" rx="14" fill="#1E293B" stroke="#F59E0B" stroke-width="1.5"/>
     <rect width="350" height="38" rx="14" fill="#D97706" fill-opacity="0.2"/>
-    <text x="20" y="25" fill="#FBBF24" font-size="14" font-weight="800">4. FULFILLMENT PAYMENT GATE</text>
-    <text x="20" y="65" fill="#F8FAFC" font-size="16" font-weight="700">Fulfillment Security Check</text>
+    <text x="20" y="25" fill="#FBBF24" font-size="14" font-weight="800">4. FULFILLMENT PROCESS GATE</text>
+    <text x="20" y="65" fill="#F8FAFC" font-size="16" font-weight="700">n8n Payment Orchestration</text>
     <text x="20" y="88" fill="#94A3B8" font-size="13">Endpoint: POST /api/internal/orders/[id]/process</text>
     
     <rect x="20" y="105" width="310" height="135" rx="8" fill="#0F172A" stroke="#334155"/>
     <text x="30" y="128" fill="#FBBF24" font-size="12" font-weight="700">Strict Safety Invariants:</text>
-    <text x="30" y="146" fill="#F87171" font-size="12">• Rejects unpaid orders (HTTP 409)</text>
-    <text x="30" y="164" fill="#CBD5E1" font-size="12">• Rejects non-PENDING status transitions</text>
-    <text x="30" y="182" fill="#CBD5E1" font-size="12">• Verifies item stock before any mutation</text>
-    <text x="30" y="200" fill="#CBD5E1" font-size="12">• Protected by X-Automation-Secret</text>
-    <text x="30" y="218" fill="#FBBF24" font-size="11" font-weight="700">[IMPLEMENTED]</text>
+    <text x="30" y="146" fill="#CBD5E1" font-size="12">• Claims event via ConsumerEvent</text>
+    <text x="30" y="164" fill="#F87171" font-size="12">• Rejects unpaid orders (HTTP 409)</text>
+    <text x="30" y="182" fill="#34D399" font-size="12">• If status != PENDING $\rightarrow$ alreadyProcessed</text>
+    <text x="30" y="200" fill="#CBD5E1" font-size="12">• Cannot decrement stock twice</text>
+    <text x="30" y="218" fill="#FBBF24" font-size="11" font-weight="700">[IDEMPOTENT EXECUTION]</text>
   </g>
 
   <!-- ROW 2: Transactional Execution & Outbox Dispatcher (Bottom Flow) -->
@@ -119,68 +119,69 @@
   <g transform="translate(40, 560)">
     <rect width="360" height="280" rx="14" fill="#0F172A" stroke="#10B981" stroke-width="2"/>
     <rect width="360" height="38" rx="14" fill="#059669" fill-opacity="0.2"/>
-    <text x="20" y="25" fill="#34D399" font-size="14" font-weight="800">5. ATOMIC DB TRANSACTION</text>
-    <text x="20" y="65" fill="#F8FAFC" font-size="16" font-weight="700">Stock Mutate &amp; Status Transition</text>
-    <text x="20" y="88" fill="#94A3B8" font-size="13">Prisma 8 db.transaction Execution</text>
+    <text x="20" y="25" fill="#34D399" font-size="14" font-weight="800">5. ATOMIC FULFILLMENT TX</text>
+    <text x="20" y="65" fill="#F8FAFC" font-size="16" font-weight="700">Conditional Stock Decrement</text>
+    <text x="20" y="88" fill="#94A3B8" font-size="13">Prisma 8 tx.orm Execution</text>
     
     <rect x="20" y="105" width="320" height="155" rx="8" fill="#1E293B" stroke="#059669"/>
-    <text x="30" y="128" fill="#34D399" font-size="12" font-weight="700">Atomic Operations (Single Commit):</text>
-    <text x="30" y="148" fill="#E2E8F0" font-size="12">1. Decrements Product.stock for all items</text>
-    <text x="30" y="168" fill="#E2E8F0" font-size="12">2. Updates <tspan fill="#34D399" font-weight="700">Order.status = PROCESSING</tspan></text>
-    <text x="30" y="188" fill="#E2E8F0" font-size="12">3. Creates <tspan fill="#38BDF8" font-weight="700">INVENTORY_UPDATED</tspan> OutboxEvent</text>
-    <text x="30" y="208" fill="#E2E8F0" font-size="12">4. Dispatches Resend Email post-commit</text>
-    <text x="30" y="235" fill="#34D399" font-size="11" font-weight="700">[IMPLEMENTED]</text>
+    <text x="30" y="128" fill="#34D399" font-size="12" font-weight="700">Single Database Transaction:</text>
+    <text x="30" y="146" fill="#E2E8F0" font-size="11">1. UPDATE product SET stock = stock - qty</text>
+    <text x="30" y="162" fill="#E2E8F0" font-size="11">   WHERE stock &gt;= qty (Atomic Concurrency)</text>
+    <text x="30" y="178" fill="#E2E8F0" font-size="11">2. Update Order.status = PROCESSING</text>
+    <text x="30" y="194" fill="#E2E8F0" font-size="11">3. Create INVENTORY_UPDATED Outbox</text>
+    <text x="30" y="210" fill="#E2E8F0" font-size="11">4. Create ORDER_PROCESSING_NOTIFICATION</text>
+    <text x="30" y="235" fill="#34D399" font-size="11" font-weight="700">[ATOMIC SINGLE COMMIT]</text>
   </g>
 
   <!-- Step 6: Outbox Delivery Engine -->
   <g transform="translate(430, 560)">
     <rect width="360" height="280" rx="14" fill="#1E293B" stroke="#0284C7" stroke-width="1.5"/>
     <rect width="360" height="38" rx="14" fill="#0369A1" fill-opacity="0.2"/>
-    <text x="20" y="25" fill="#38BDF8" font-size="14" font-weight="800">6. OUTBOX DISPATCHER ENGINE</text>
-    <text x="20" y="65" fill="#F8FAFC" font-size="16" font-weight="700">Durable At-Least-Once Delivery</text>
+    <text x="20" y="25" fill="#38BDF8" font-size="14" font-weight="800">6. OUTBOX DISPATCHER</text>
+    <text x="20" y="65" fill="#F8FAFC" font-size="16" font-weight="700">Dedicated Webhook Dispatcher</text>
     <text x="20" y="88" fill="#94A3B8" font-size="13">Service: src/lib/outbox.ts</text>
     
     <rect x="20" y="105" width="320" height="155" rx="8" fill="#0F172A" stroke="#334155"/>
-    <text x="30" y="128" fill="#38BDF8" font-size="12" font-weight="700">Engine Features:</text>
-    <text x="30" y="148" fill="#CBD5E1" font-size="12">• 5-Min Lease Recovery (STALE_LEASE)</text>
-    <text x="30" y="168" fill="#CBD5E1" font-size="12">• Exponential Backoff (+1m, +5m, +15m, +60m)</text>
-    <text x="30" y="188" fill="#CBD5E1" font-size="12">• Max 5 attempts $\rightarrow$ FAILED (Dead Letter)</text>
-    <text x="30" y="208" fill="#CBD5E1" font-size="12">• Stable eventId injected into payload</text>
-    <text x="30" y="235" fill="#38BDF8" font-size="11" font-weight="700">[IMPLEMENTED]</text>
+    <text x="30" y="128" fill="#38BDF8" font-size="12" font-weight="700">Routing &amp; Delivery Guarantees:</text>
+    <text x="30" y="148" fill="#CBD5E1" font-size="12">• INVENTORY_UPDATED $\rightarrow$ Inventory Webhook</text>
+    <text x="30" y="168" fill="#CBD5E1" font-size="12">• ORDER_*_NOTIF $\rightarrow$ Email Webhook</text>
+    <text x="30" y="188" fill="#CBD5E1" font-size="12">• Exponential Backoff (+1m, +5m, +15m, +60m)</text>
+    <text x="30" y="208" fill="#CBD5E1" font-size="12">• Inject stable eventId into payload</text>
+    <text x="30" y="235" fill="#38BDF8" font-size="11" font-weight="700">[AT-LEAST-ONCE DELIVERY]</text>
   </g>
 
-  <!-- Step 7: n8n Automation Engine -->
+  <!-- Step 7: Low Stock Threshold Check -->
   <g transform="translate(820, 560)">
     <rect width="360" height="280" rx="14" fill="#1E293B" stroke="#FF6D5A" stroke-width="1.5"/>
     <rect width="360" height="38" rx="14" fill="#FF6D5A" fill-opacity="0.2"/>
-    <text x="20" y="25" fill="#FF6D5A" font-size="14" font-weight="800">7. n8n WORKFLOW ORCHESTRATOR</text>
-    <text x="20" y="65" fill="#F8FAFC" font-size="16" font-weight="700">Workflow Branching &amp; Monitoring</text>
-    <text x="20" y="88" fill="#94A3B8" font-size="13">Environment: Docker Container</text>
+    <text x="20" y="25" fill="#FF6D5A" font-size="14" font-weight="800">7. LOW-STOCK THRESHOLD</text>
+    <text x="20" y="65" fill="#F8FAFC" font-size="16" font-weight="700">n8n Inventory Monitoring</text>
+    <text x="20" y="88" fill="#94A3B8" font-size="13">Workflow: Inventory Monitoring</text>
     
     <rect x="20" y="105" width="320" height="155" rx="8" fill="#0F172A" stroke="#334155"/>
-    <text x="30" y="128" fill="#FF6D5A" font-size="12" font-weight="700">Orchestrated Slices:</text>
-    <text x="30" y="148" fill="#CBD5E1" font-size="12">• Receives INVENTORY_UPDATED webhook</text>
-    <text x="30" y="168" fill="#CBD5E1" font-size="12">• Queries GET /api/internal/inventory</text>
-    <text x="30" y="188" fill="#CBD5E1" font-size="12">• Filters items where stock &lt; threshold</text>
-    <text x="30" y="208" fill="#CBD5E1" font-size="12">• Deduplicates eventId before alert</text>
-    <text x="30" y="235" fill="#FF6D5A" font-size="11" font-weight="700">[IMPLEMENTED IN n8n]</text>
+    <text x="30" y="128" fill="#FF6D5A" font-size="12" font-weight="700">Transition Rule &amp; Deduplication:</text>
+    <text x="30" y="148" fill="#CBD5E1" font-size="12">• previousStock &gt; threshold</text>
+    <text x="30" y="168" fill="#CBD5E1" font-size="12">• AND newStock &lt;= threshold</text>
+    <text x="30" y="188" fill="#CBD5E1" font-size="12">• Claims consumerId: inventory-discord</text>
+    <text x="30" y="208" fill="#CBD5E1" font-size="12">• Suppresses duplicate alert triggers</text>
+    <text x="30" y="235" fill="#FF6D5A" font-size="11" font-weight="700">[DEDUPLICATED TRIGGER]</text>
   </g>
 
-  <!-- Step 8: Post-Commit Handlers -->
+  <!-- Step 8: Downstream Handlers -->
   <g transform="translate(1210, 560)">
     <rect width="350" height="280" rx="14" fill="#1E293B" stroke="#A78BFA" stroke-width="1.5"/>
     <rect width="350" height="38" rx="14" fill="#7C3AED" fill-opacity="0.2"/>
-    <text x="20" y="25" fill="#A78BFA" font-size="14" font-weight="800">8. DOWNSTREAM ALERTS &amp; EMAILS</text>
+    <text x="20" y="25" fill="#A78BFA" font-size="14" font-weight="800">8. DISCORD &amp; EMAIL DISPATCH</text>
     <text x="20" y="65" fill="#F8FAFC" font-size="16" font-weight="700">Operations &amp; Customer Handlers</text>
-    <text x="20" y="88" fill="#94A3B8" font-size="13">Services: Resend &amp; Discord</text>
+    <text x="20" y="88" fill="#94A3B8" font-size="13">Services: Resend API &amp; Discord</text>
     
     <rect x="20" y="105" width="310" height="155" rx="8" fill="#0F172A" stroke="#334155"/>
     <text x="30" y="128" fill="#A78BFA" font-size="12" font-weight="700">Dispatched Outputs:</text>
-    <text x="30" y="148" fill="#FB7185" font-size="12">• Resend Order Processing Email (Customer)</text>
-    <text x="30" y="168" fill="#818CF8" font-size="12">• Discord Low-Stock Alert (Operations)</text>
-    <text x="30" y="188" fill="#CBD5E1" font-size="12">• PII Isolation: No email/phone in Discord</text>
-    <text x="30" y="208" fill="#CBD5E1" font-size="12">• Best-effort email delivery post-commit</text>
-    <text x="30" y="235" fill="#A78BFA" font-size="11" font-weight="700">[IMPLEMENTED]</text>
+    <text x="30" y="148" fill="#FB7185" font-size="12">• Resend HTML Email (Idempotency-Key)</text>
+    <text x="30" y="168" fill="#818CF8" font-size="12">• Discord Low-Stock Warning (#ops-alerts)</text>
+    <text x="30" y="188" fill="#CBD5E1" font-size="12">• PII Isolation: No PII in Discord</text>
+    <text x="30" y="208" fill="#CBD5E1" font-size="12">• Deduplicated via ConsumerEvent</text>
+    <text x="30" y="235" fill="#A78BFA" font-size="11" font-weight="700">[IDEMPOTENT DISPATCH]</text>
   </g>
 
   <!-- Flow Connector Lines -->
@@ -192,7 +193,7 @@
   <path d="M 1170 360 L 1210 360" stroke="#34D399" stroke-width="2.5" marker-end="url(#arr-green)"/>
   
   <!-- Row Transition: Step 4 (Top Right) -> Step 5 (Bottom Left) -->
-  <path d="M 1385 490 L 1385 520 L 220 520 L 220 560" stroke="#F59E0B" stroke-width="2.5" marker-end="url(#arr-blue)"/>
+  <path d="M 1385 490 L 1385 520 L 220 520 L 220 560" stroke="#F59E0B" stroke-width="2.5" marker-end="url(#arr-amber)"/>
 
   <!-- Row 2: Step 5 -> Step 6 -->
   <path d="M 400 700 L 430 700" stroke="#34D399" stroke-width="2.5" marker-end="url(#arr-green)"/>
