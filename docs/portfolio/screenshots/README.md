@@ -8,36 +8,40 @@ This directory contains high-resolution, sanitized PNG visuals and UI screenshot
 
 | Filename | Visual Type | Recommended Use | Upwork Priority |
 | :--- | :--- | :--- | :--- |
-| `architecture/00-portfolio-overview.png` | Client Overview Architecture Diagram | Upwork Portfolio Item #1 / Proposal Hero | **Priority 1 (Hero)** |
-| `01-storefront-catalog.png` | Customer Storefront UI | Upwork Carousel Item / UI Preview | **Priority 2** |
-| `06-order-processing.png` | Order Confirmation & Polling UI | Payment & Order State Verification | **Priority 3** |
-| `architecture/01-system-architecture.png` | Engineering Architecture Diagram | Deep-Dive Technical Spec / System Architecture | **Priority 4** |
-| `architecture/02-order-inventory-automation.png` | Order & Inventory Flow Diagram | Backend Concurrency & Reliability Spec | **Priority 5** |
-| `architecture/03-hubspot-crm-automation.png` | HubSpot CRM Integration Diagram | CRM Lifecycle & Outbox Pattern Spec | Priority 6 |
-| `02-product-detail.png` | Product Detail Page UI | E-commerce Catalogue Detail Showcase | Priority 7 |
-| `04-checkout.png` | Checkout Review UI | Payment Flow & Input Form Showcase | Priority 8 |
-| `03-cart-review.png` | Shopping Cart UI | Cart Management & Subtotal State | Priority 9 |
+| `00-upwork-cover.png` | Dedicated Thumbnail Cover | Upwork Project Grid Cover (300-400px Thumbnail) | **Priority 1 (Thumbnail Cover)** |
+| `architecture/00-portfolio-overview.png` | Client Overview Architecture Diagram | Upwork Portfolio Slide #1 / Proposal Hero | **Priority 2 (Architecture Hero)** |
+| `01-storefront-catalog.png` | Customer Storefront UI | Upwork Carousel Item / UI Preview | **Priority 3** |
+| `06-order-processing.png` | Order Confirmation & Polling UI | Payment & Order State Verification | **Priority 4** |
+| `architecture/01-system-architecture.png` | Engineering Architecture Diagram | Deep-Dive Technical Spec / System Architecture | **Priority 5** |
+| `architecture/02-order-inventory-automation.png` | Order & Inventory Flow Diagram | Backend Concurrency & Reliability Spec | Priority 6 |
+| `architecture/03-hubspot-crm-automation.png` | HubSpot CRM Integration Diagram | CRM Lifecycle & Outbox Pattern Spec | Priority 7 |
+| `02-product-detail.png` | Product Detail Page UI | E-commerce Catalogue Detail Showcase | Priority 8 |
+| `04-checkout.png` | Checkout Review UI | Payment Flow & Input Form Showcase | Priority 9 |
+| `03-cart-review.png` | Shopping Cart UI | Cart Management & Subtotal State | Priority 10 |
 
 ---
 
 ## ⭐ Top 5 Recommended Upwork Portfolio Images
 
-For maximum client conversion within 5–10 seconds, showcase these 5 high-resolution visuals on your Upwork proposal or portfolio project:
+For maximum client conversion within 5–10 seconds on the Upwork grid and carousel, showcase these 5 high-resolution visuals:
 
-1. **`architecture/00-portfolio-overview.png`** (Cover / Slide 1)
+1. **`00-upwork-cover.png`** (Upwork Grid Cover Thumbnail)
+   * *Why*: Specifically designed for 300–400px displayed thumbnail grid readability — Large bold title (`AI E-commerce Automation Hub`), tech stack pills (`Stripe` • `n8n` • `HubSpot` • `PostgreSQL`), and high-impact product card preview.
+2. **`architecture/00-portfolio-overview.png`** (Slide 1 / Proposal Cover)
    * *Why*: Communicates the entire platform in 5 seconds — Customer Storefront → PostgreSQL Outbox → n8n Automation Engine → Stripe, Inventory, HubSpot CRM, Resend Email, Shipping & Discord Alerts.
-2. **`01-storefront-catalog.png`** (Slide 2)
+3. **`01-storefront-catalog.png`** (Slide 2)
    * *Why*: Demonstrates premium storefront UI quality with live search, category chip filters, real-time stock badges, and custom vector product artwork.
-3. **`06-order-processing.png`** (Slide 3)
+4. **`06-order-processing.png`** (Slide 3)
    * *Why*: Proves real-time order tracking, payment verification (`PAID`), automated status transitions (`PROCESSING`), and order-scoped security authorization.
-4. **`architecture/01-system-architecture.png`** (Slide 4)
+5. **`architecture/01-system-architecture.png`** (Slide 4)
    * *Why*: Proves deep full-stack technical rigor for enterprise clients — Next.js 16 App Router, Neon PostgreSQL, transactional outbox, n8n orchestration, and security contracts.
-5. **`architecture/02-order-inventory-automation.png`** (Slide 5)
-   * *Why*: Highlights technical concurrency expertise — atomic SQL stock decrements (`stock >= qty`), two-phase `ConsumerEvent` deduplication, and low-stock threshold alerts.
 
 ---
 
 ## 🎨 Asset File Details & Resolution
+
+### Upwork Thumbnail Cover (`docs/portfolio/screenshots/`)
+* **`00-upwork-cover.png`** — 1600 × 900 px (Designed for high impact at 300–400px thumbnail display width)
 
 ### Architecture Visuals (`docs/portfolio/screenshots/architecture/`)
 * **`00-portfolio-overview.png`** — 1600 × 900 px (Simplified client-facing overview, dark slate `#0F172A` theme)

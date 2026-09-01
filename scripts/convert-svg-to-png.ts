@@ -6,31 +6,33 @@ const { chromium } = playwright;
 
 const DIAGRAMS = [
   {
-    svgName: '00-portfolio-overview.svg',
-    pngName: '00-portfolio-overview.png',
+    svgPath: path.join(process.cwd(), 'docs', 'portfolio', 'screenshots', '00-upwork-cover.svg'),
+    pngPath: path.join(process.cwd(), 'docs', 'portfolio', 'screenshots', '00-upwork-cover.png'),
+    name: '00-upwork-cover',
   },
   {
-    svgName: '01-system-architecture.svg',
-    pngName: '01-system-architecture.png',
+    svgPath: path.join(process.cwd(), 'docs', 'portfolio', 'ecommerce-automation', 'visuals', '00-portfolio-overview.svg'),
+    pngPath: path.join(process.cwd(), 'docs', 'portfolio', 'screenshots', 'architecture', '00-portfolio-overview.png'),
+    name: '00-portfolio-overview',
   },
   {
-    svgName: '02-order-inventory-automation.svg',
-    pngName: '02-order-inventory-automation.png',
+    svgPath: path.join(process.cwd(), 'docs', 'portfolio', 'ecommerce-automation', 'visuals', '01-system-architecture.svg'),
+    pngPath: path.join(process.cwd(), 'docs', 'portfolio', 'screenshots', 'architecture', '01-system-architecture.png'),
+    name: '01-system-architecture',
   },
   {
-    svgName: '03-hubspot-crm-automation.svg',
-    pngName: '03-hubspot-crm-automation.png',
+    svgPath: path.join(process.cwd(), 'docs', 'portfolio', 'ecommerce-automation', 'visuals', '02-order-inventory-automation.svg'),
+    pngPath: path.join(process.cwd(), 'docs', 'portfolio', 'screenshots', 'architecture', '02-order-inventory-automation.png'),
+    name: '02-order-inventory-automation',
+  },
+  {
+    svgPath: path.join(process.cwd(), 'docs', 'portfolio', 'ecommerce-automation', 'visuals', '03-hubspot-crm-automation.svg'),
+    pngPath: path.join(process.cwd(), 'docs', 'portfolio', 'screenshots', 'architecture', '03-hubspot-crm-automation.png'),
+    name: '03-hubspot-crm-automation',
   },
 ];
 
 async function main() {
-  const sourceDir = path.join(process.cwd(), 'docs', 'portfolio', 'ecommerce-automation', 'visuals');
-  const targetDir = path.join(process.cwd(), 'docs', 'portfolio', 'screenshots', 'architecture');
-
-  if (!fs.existsSync(targetDir)) {
-    fs.mkdirSync(targetDir, { recursive: true });
-  }
-
   console.log('Launching Playwright Chromium for SVG conversion...');
   const browser = await chromium.launch({ channel: 'chrome', headless: true });
   const context = await browser.newContext({
@@ -41,17 +43,18 @@ async function main() {
   const page = await context.newPage();
 
   for (const item of DIAGRAMS) {
-    const svgPath = path.join(sourceDir, item.svgName);
-    const pngPath = path.join(targetDir, item.pngName);
-
-    if (!fs.existsSync(svgPath)) {
-      console.error(`SVG source not found: ${svgPath}`);
+    if (!fs.existsSync(item.svgPath)) {
+      console.error(`SVG source not found: ${item.svgPath}`);
       continue;
     }
 
-    const svgContent = fs.readFileSync(svgPath, 'utf8');
-    const tempHtmlPath = path.join(targetDir, `temp_${item.pngName.replace('.png', '.html')}`);
+    const svgContent = fs.readFileSync(item.svgPath, 'utf8');
+    const tempDir = path.dirname(item.pngPath);
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
 
+    const tempHtmlPath = path.join(tempDir, `temp_${item.name}.html`);
     const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
@@ -70,18 +73,18 @@ async function main() {
     fs.writeFileSync(tempHtmlPath, htmlContent, 'utf8');
 
     const fileUrl = `file:///${tempHtmlPath.replace(/\\/g, '/')}`;
-    console.log(`Rendering ${item.svgName} -> ${item.pngName}...`);
+    console.log(`Rendering ${item.name}...`);
 
     await page.goto(fileUrl);
     await page.waitForTimeout(500);
-    await page.screenshot({ path: pngPath });
+    await page.screenshot({ path: item.pngPath });
 
     fs.unlinkSync(tempHtmlPath);
-    console.log(`✓ Saved high-resolution PNG: ${pngPath}`);
+    console.log(`✓ Saved high-resolution PNG: ${item.pngPath}`);
   }
 
   await browser.close();
-  console.log('=== SVG to PNG Conversion Complete ===');
+  console.log('=== All Portfolio Graphics Exported Successfully ===');
   process.exit(0);
 }
 
