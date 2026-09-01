@@ -23,6 +23,20 @@ enum OutboxStatus {
   FAILED
 }
 
+enum AdminRole {
+  ADMIN
+}
+
+model Admin {
+  id           String            @id @default(dbgenerated("gen_random_uuid()"))
+  email        String            @unique
+  passwordHash String
+  name         String
+  role         AdminRole         @default(ADMIN)
+  createdAt    TimestamptzString @default(now())
+  updatedAt    temporal.updatedAtString()
+}
+
 model Product {
   id                String            @id @default(dbgenerated("gen_random_uuid()"))
   name              String

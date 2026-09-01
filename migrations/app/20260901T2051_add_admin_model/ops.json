@@ -1,0 +1,940 @@
+[
+  {
+    "id": "schema.public",
+    "label": "Create schema \"public\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"public\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.admin",
+    "label": "Create table \"admin\"",
+    "summary": "Creates table \"admin\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "admin"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"admin\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"admin\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"admin\"",
+        "sql": "CREATE TABLE \"public\".\"admin\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"email\" text NOT NULL,\n  \"id\" text DEFAULT (gen_random_uuid()) NOT NULL,\n  \"name\" text NOT NULL,\n  \"passwordHash\" text NOT NULL,\n  \"role\" text DEFAULT 'ADMIN' NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"admin_role_check_d64e1afa\" CHECK (\"role\" IN ('ADMIN'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"admin\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"admin\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.consumerEvent",
+    "label": "Create table \"consumerEvent\"",
+    "summary": "Creates table \"consumerEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "consumerEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"consumerEvent\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"consumerEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"consumerEvent\"",
+        "sql": "CREATE TABLE \"public\".\"consumerEvent\" (\n  \"attemptCount\" int4 DEFAULT 1 NOT NULL,\n  \"claimedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"completedAt\" timestamptz,\n  \"consumerId\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"eventId\" text NOT NULL,\n  \"id\" text DEFAULT (gen_random_uuid()) NOT NULL,\n  \"lastError\" text,\n  \"status\" text DEFAULT 'PROCESSING' NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"consumerEvent\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"consumerEvent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.customer",
+    "label": "Create table \"customer\"",
+    "summary": "Creates table \"customer\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "customer"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"customer\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"customer\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"customer\"",
+        "sql": "CREATE TABLE \"public\".\"customer\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"email\" text NOT NULL,\n  \"id\" text DEFAULT (gen_random_uuid()) NOT NULL,\n  \"name\" text NOT NULL,\n  \"phone\" text,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"customer\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"customer\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.order",
+    "label": "Create table \"order\"",
+    "summary": "Creates table \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"order\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"order\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"order\"",
+        "sql": "CREATE TABLE \"public\".\"order\" (\n  \"carrier\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"customerId\" text NOT NULL,\n  \"deliveredAt\" timestamptz,\n  \"id\" text DEFAULT (gen_random_uuid()) NOT NULL,\n  \"paymentStatus\" text DEFAULT 'PENDING' NOT NULL,\n  \"shippedAt\" timestamptz,\n  \"status\" text DEFAULT 'PENDING' NOT NULL,\n  \"statusReason\" text,\n  \"stripeCheckoutSessionId\" text,\n  \"stripePaymentIntentId\" text,\n  \"subtotalCents\" int4 NOT NULL,\n  \"totalCents\" int4 NOT NULL,\n  \"trackingNumber\" text,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"order_paymentStatus_check_60515b20\" CHECK (\"paymentStatus\" IN ('PENDING', 'PAID', 'FAILED', 'REFUNDED')),\n  CONSTRAINT \"order_status_check_50337988\" CHECK (\"status\" IN ('PENDING', 'PROCESSING', 'ON_HOLD', 'SHIPPED', 'DELIVERED', 'CANCELLED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"order\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"order\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.orderItem",
+    "label": "Create table \"orderItem\"",
+    "summary": "Creates table \"orderItem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "orderItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"orderItem\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"orderItem\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"orderItem\"",
+        "sql": "CREATE TABLE \"public\".\"orderItem\" (\n  \"id\" text DEFAULT (gen_random_uuid()) NOT NULL,\n  \"orderId\" text NOT NULL,\n  \"productId\" text NOT NULL,\n  \"quantity\" int4 NOT NULL,\n  \"unitPriceCents\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"orderItem\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"orderItem\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.outboxEvent",
+    "label": "Create table \"outboxEvent\"",
+    "summary": "Creates table \"outboxEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "outboxEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"outboxEvent\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"outboxEvent\"",
+        "sql": "CREATE TABLE \"public\".\"outboxEvent\" (\n  \"aggregateId\" text NOT NULL,\n  \"aggregateType\" text NOT NULL,\n  \"attemptCount\" int4 DEFAULT 0 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"deliveredAt\" timestamptz,\n  \"eventType\" text NOT NULL,\n  \"id\" text DEFAULT (gen_random_uuid()) NOT NULL,\n  \"lastAttemptAt\" timestamptz,\n  \"lastError\" text,\n  \"nextAttemptAt\" timestamptz,\n  \"payload\" json NOT NULL,\n  \"status\" text DEFAULT 'PENDING' NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"outboxEvent_status_check_2a27bec6\" CHECK (\"status\" IN ('PENDING', 'PROCESSING', 'DELIVERED', 'FAILED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"outboxEvent\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxEvent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.product",
+    "label": "Create table \"product\"",
+    "summary": "Creates table \"product\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "product"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"product\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"product\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"product\"",
+        "sql": "CREATE TABLE \"public\".\"product\" (\n  \"category\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"description\" text NOT NULL,\n  \"id\" text DEFAULT (gen_random_uuid()) NOT NULL,\n  \"imageUrl\" text,\n  \"lowStockThreshold\" int4 DEFAULT 5 NOT NULL,\n  \"name\" text NOT NULL,\n  \"priceCents\" int4 NOT NULL,\n  \"slug\" text NOT NULL,\n  \"stock\" int4 NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"product\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"product\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.stripeEvent",
+    "label": "Create table \"stripeEvent\"",
+    "summary": "Creates table \"stripeEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "stripeEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"stripeEvent\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"stripeEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"stripeEvent\"",
+        "sql": "CREATE TABLE \"public\".\"stripeEvent\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  \"type\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"stripeEvent\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"stripeEvent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.admin.admin_email_key",
+    "label": "Add unique constraint on \"admin\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "admin_email_key",
+        "table": "admin"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"admin_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "admin_email_key",
+          "public",
+          "\"public\".\"admin\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"admin_email_key\"",
+        "sql": "ALTER TABLE \"public\".\"admin\" ADD CONSTRAINT \"admin_email_key\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"admin_email_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "admin_email_key",
+          "public",
+          "\"public\".\"admin\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.consumerEvent.consumerEvent_consumerId_eventId_key",
+    "label": "Add unique constraint on \"consumerEvent\" (consumerId, eventId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "consumerEvent_consumerId_eventId_key",
+        "table": "consumerEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"consumerEvent_consumerId_eventId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "consumerEvent_consumerId_eventId_key",
+          "public",
+          "\"public\".\"consumerEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"consumerEvent_consumerId_eventId_key\"",
+        "sql": "ALTER TABLE \"public\".\"consumerEvent\" ADD CONSTRAINT \"consumerEvent_consumerId_eventId_key\" UNIQUE (\"consumerId\", \"eventId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"consumerEvent_consumerId_eventId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "consumerEvent_consumerId_eventId_key",
+          "public",
+          "\"public\".\"consumerEvent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.customer.customer_email_key",
+    "label": "Add unique constraint on \"customer\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "customer_email_key",
+        "table": "customer"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"customer_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "customer_email_key",
+          "public",
+          "\"public\".\"customer\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"customer_email_key\"",
+        "sql": "ALTER TABLE \"public\".\"customer\" ADD CONSTRAINT \"customer_email_key\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"customer_email_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "customer_email_key",
+          "public",
+          "\"public\".\"customer\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.order.order_stripeCheckoutSessionId_key",
+    "label": "Add unique constraint on \"order\" (stripeCheckoutSessionId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "order_stripeCheckoutSessionId_key",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"order_stripeCheckoutSessionId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "order_stripeCheckoutSessionId_key",
+          "public",
+          "\"public\".\"order\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"order_stripeCheckoutSessionId_key\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD CONSTRAINT \"order_stripeCheckoutSessionId_key\" UNIQUE (\"stripeCheckoutSessionId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"order_stripeCheckoutSessionId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "order_stripeCheckoutSessionId_key",
+          "public",
+          "\"public\".\"order\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.product.product_slug_key",
+    "label": "Add unique constraint on \"product\" (slug)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "product_slug_key",
+        "table": "product"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"product_slug_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "product_slug_key",
+          "public",
+          "\"public\".\"product\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"product_slug_key\"",
+        "sql": "ALTER TABLE \"public\".\"product\" ADD CONSTRAINT \"product_slug_key\" UNIQUE (\"slug\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"product_slug_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "product_slug_key",
+          "public",
+          "\"public\".\"product\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.consumerEvent.consumerEvent_status_claimedAt_idx_4fabb826",
+    "label": "Create index \"consumerEvent_status_claimedAt_idx_4fabb826\" on \"consumerEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "consumerEvent_status_claimedAt_idx_4fabb826",
+        "table": "consumerEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"consumerEvent_status_claimedAt_idx_4fabb826\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"consumerEvent_status_claimedAt_idx_4fabb826\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"consumerEvent_status_claimedAt_idx_4fabb826\"",
+        "sql": "CREATE INDEX \"consumerEvent_status_claimedAt_idx_4fabb826\" ON \"public\".\"consumerEvent\" (\"status\", \"claimedAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"consumerEvent_status_claimedAt_idx_4fabb826\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"consumerEvent_status_claimedAt_idx_4fabb826\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.order.order_customerId_idx_b2a8a46c",
+    "label": "Create index \"order_customerId_idx_b2a8a46c\" on \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "order_customerId_idx_b2a8a46c",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"order_customerId_idx_b2a8a46c\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"order_customerId_idx_b2a8a46c\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"order_customerId_idx_b2a8a46c\"",
+        "sql": "CREATE INDEX \"order_customerId_idx_b2a8a46c\" ON \"public\".\"order\" (\"customerId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"order_customerId_idx_b2a8a46c\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"order_customerId_idx_b2a8a46c\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.orderItem.orderItem_orderId_idx_d284871b",
+    "label": "Create index \"orderItem_orderId_idx_d284871b\" on \"orderItem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "orderItem_orderId_idx_d284871b",
+        "table": "orderItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"orderItem_orderId_idx_d284871b\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"orderItem_orderId_idx_d284871b\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"orderItem_orderId_idx_d284871b\"",
+        "sql": "CREATE INDEX \"orderItem_orderId_idx_d284871b\" ON \"public\".\"orderItem\" (\"orderId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"orderItem_orderId_idx_d284871b\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"orderItem_orderId_idx_d284871b\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.orderItem.orderItem_productId_idx_5858600a",
+    "label": "Create index \"orderItem_productId_idx_5858600a\" on \"orderItem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "orderItem_productId_idx_5858600a",
+        "table": "orderItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"orderItem_productId_idx_5858600a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"orderItem_productId_idx_5858600a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"orderItem_productId_idx_5858600a\"",
+        "sql": "CREATE INDEX \"orderItem_productId_idx_5858600a\" ON \"public\".\"orderItem\" (\"productId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"orderItem_productId_idx_5858600a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"orderItem_productId_idx_5858600a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.outboxEvent.outboxEvent_aggregateType_aggregateId_idx_816576d9",
+    "label": "Create index \"outboxEvent_aggregateType_aggregateId_idx_816576d9\" on \"outboxEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "outboxEvent_aggregateType_aggregateId_idx_816576d9",
+        "table": "outboxEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"outboxEvent_aggregateType_aggregateId_idx_816576d9\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxEvent_aggregateType_aggregateId_idx_816576d9\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"outboxEvent_aggregateType_aggregateId_idx_816576d9\"",
+        "sql": "CREATE INDEX \"outboxEvent_aggregateType_aggregateId_idx_816576d9\" ON \"public\".\"outboxEvent\" (\"aggregateType\", \"aggregateId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"outboxEvent_aggregateType_aggregateId_idx_816576d9\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxEvent_aggregateType_aggregateId_idx_816576d9\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.outboxEvent.outboxEvent_status_nextAttemptAt_idx_8ba20615",
+    "label": "Create index \"outboxEvent_status_nextAttemptAt_idx_8ba20615\" on \"outboxEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "outboxEvent_status_nextAttemptAt_idx_8ba20615",
+        "table": "outboxEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"outboxEvent_status_nextAttemptAt_idx_8ba20615\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxEvent_status_nextAttemptAt_idx_8ba20615\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"outboxEvent_status_nextAttemptAt_idx_8ba20615\"",
+        "sql": "CREATE INDEX \"outboxEvent_status_nextAttemptAt_idx_8ba20615\" ON \"public\".\"outboxEvent\" (\"status\", \"nextAttemptAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"outboxEvent_status_nextAttemptAt_idx_8ba20615\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxEvent_status_nextAttemptAt_idx_8ba20615\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.product.product_category_idx_f2600f8e",
+    "label": "Create index \"product_category_idx_f2600f8e\" on \"product\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "product_category_idx_f2600f8e",
+        "table": "product"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"product_category_idx_f2600f8e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"product_category_idx_f2600f8e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"product_category_idx_f2600f8e\"",
+        "sql": "CREATE INDEX \"product_category_idx_f2600f8e\" ON \"public\".\"product\" (\"category\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"product_category_idx_f2600f8e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"product_category_idx_f2600f8e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.order.order_customerId_fkey",
+    "label": "Add foreign key \"order_customerId_fkey\" on \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "order_customerId_fkey",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"order_customerId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "order_customerId_fkey",
+          "public",
+          "\"public\".\"order\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"order_customerId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"order\"\nADD CONSTRAINT \"order_customerId_fkey\"\nFOREIGN KEY (\"customerId\")\nREFERENCES \"public\".\"customer\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"order_customerId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "order_customerId_fkey",
+          "public",
+          "\"public\".\"order\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.orderItem.orderItem_orderId_fkey",
+    "label": "Add foreign key \"orderItem_orderId_fkey\" on \"orderItem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "orderItem_orderId_fkey",
+        "table": "orderItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"orderItem_orderId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "orderItem_orderId_fkey",
+          "public",
+          "\"public\".\"orderItem\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"orderItem_orderId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"orderItem\"\nADD CONSTRAINT \"orderItem_orderId_fkey\"\nFOREIGN KEY (\"orderId\")\nREFERENCES \"public\".\"order\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"orderItem_orderId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "orderItem_orderId_fkey",
+          "public",
+          "\"public\".\"orderItem\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.orderItem.orderItem_productId_fkey",
+    "label": "Add foreign key \"orderItem_productId_fkey\" on \"orderItem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "orderItem_productId_fkey",
+        "table": "orderItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"orderItem_productId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "orderItem_productId_fkey",
+          "public",
+          "\"public\".\"orderItem\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"orderItem_productId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"orderItem\"\nADD CONSTRAINT \"orderItem_productId_fkey\"\nFOREIGN KEY (\"productId\")\nREFERENCES \"public\".\"product\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"orderItem_productId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "orderItem_productId_fkey",
+          "public",
+          "\"public\".\"orderItem\""
+        ]
+      }
+    ]
+  }
+]

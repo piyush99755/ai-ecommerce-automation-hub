@@ -4,6 +4,10 @@
   "target": "postgres",
   "profileHash": "3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2",
   "roots": {
+    "admin": {
+      "model": "Admin",
+      "namespace": "public"
+    },
     "consumerEvent": {
       "model": "ConsumerEvent",
       "namespace": "public"
@@ -37,6 +41,15 @@
     "namespaces": {
       "public": {
         "enum": {
+          "AdminRole": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "ADMIN",
+                "value": "ADMIN"
+              }
+            ]
+          },
           "OrderStatus": {
             "codecId": "pg/text@1",
             "members": [
@@ -110,6 +123,93 @@
           }
         },
         "models": {
+          "Admin": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "email": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "passwordHash": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "role": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "AdminRole",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {},
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "email": {
+                  "column": "email"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "name": {
+                  "column": "name"
+                },
+                "passwordHash": {
+                  "column": "passwordHash"
+                },
+                "role": {
+                  "column": "role"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "admin"
+            }
+          },
           "ConsumerEvent": {
             "fields": {
               "attemptCount": {
@@ -918,6 +1018,84 @@
       "public": {
         "entries": {
           "table": {
+            "admin": {
+              "checks": [
+                {
+                  "expression": "\"role\" IN ('ADMIN')",
+                  "name": "admin_role_check_d64e1afa",
+                  "prefix": "admin_role_check"
+                }
+              ],
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "email": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "expression": "gen_random_uuid()",
+                    "kind": "function"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "passwordHash": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "role": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "ADMIN"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "AdminRole",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "email"
+                  ]
+                }
+              ]
+            },
             "consumerEvent": {
               "columns": {
                 "attemptCount": {
@@ -1565,6 +1743,12 @@
             }
           },
           "valueSet": {
+            "AdminRole": {
+              "kind": "valueSet",
+              "values": [
+                "ADMIN"
+              ]
+            },
             "OrderStatus": {
               "kind": "valueSet",
               "values": [
@@ -1600,12 +1784,27 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "7a770258fd4c1da099a8300a0a6c7d011ebba9455528e7e411fc1a3391a7eb50"
+    "storageHash": "30341f0cb4165fe7ed1e7629c68a3d16f924e069243e56da2d4f6a34ba9abaa7"
   },
   "execution": {
-    "executionHash": "502ee69058531a1a702aca8927ecd748bff4b8e9fbbb4fbdeec563f5414965fd",
+    "executionHash": "16fbb8f45286ee8c4deea75406fd1671853abe09ddb9b8885de5b6275d511f4c",
     "mutations": {
       "defaults": [
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "admin"
+          }
+        },
         {
           "onCreate": {
             "id": "timestampNow",
