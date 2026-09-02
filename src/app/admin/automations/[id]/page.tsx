@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getAuthenticatedAdminServer } from '@/lib/admin-auth';
 import { fetchDetailedAutomationWorkspace, formatCurrencyCents } from '@/lib/admin-automations';
+import { RequeueEventModal } from '@/components/admin/RequeueEventModal';
 
 export default async function AdminAutomationDetailPage({
   params,
@@ -40,6 +41,7 @@ export default async function AdminAutomationDetailPage({
     relatedOrder,
     relatedCustomer,
     consumerEvents,
+    recoveryActions,
     timeline,
     evidenceNote,
   } = workspace;
@@ -94,11 +96,20 @@ export default async function AdminAutomationDetailPage({
             Type: {event.eventType} • Aggregate: {event.aggregateType} ({event.aggregateId.substring(0, 8)}...)
           </p>
         </div>
+
+        {/* Manual Requeue Action Trigger */}
+        <RequeueEventModal
+          eventId={event.id}
+          shortId={event.shortId}
+          eventType={event.eventType}
+          status={event.status}
+          orderStatus={relatedOrder?.status}
+        />
       </div>
 
       {/* Main Grid: Event Details & Reliability Timeline */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column (2 Cols): Event Summary, Entity Link, Failure Context, Payload & Consumer Events */}
+        {/* Left Column (2 Cols): Event Summary, Entity Link, Failure Context, Payload, Recovery History & Consumer Events */}
         <div className="lg:col-span-2 space-y-6">
           {/* Event Summary Grid */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
@@ -207,7 +218,7 @@ export default async function AdminAutomationDetailPage({
                 <span>Automated Retries Exhausted (Dead-Letter FAILED State)</span>
               </div>
               <p className="text-xs text-rose-200/90 leading-relaxed">
-                This event failed after completing <span className="font-bold">{event.attemptCount}</span> automated worker retry attempt(s). Automated retry processing has stopped. Manual operational review is required.
+                This event failed after completing <span className="font-bold">{event.attemptCount}</span> automated worker retry attempt(s). Automated retry processing has stopped. Authorized admins can review and manually requeue this event.
               </p>
               {sanitizedLastError && (
                 <div className="space-y-1">
@@ -217,6 +228,70 @@ export default async function AdminAutomationDetailPage({
                   </pre>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Manual Recovery History Panel */}
+          {recoveryActions.length > 0 && (
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg space-y-0">
+              <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center space-x-2">
+                    <span>🛡️</span>
+                    <span>Manual Recovery Audit Trail</span>
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Authorized admin recovery interventions for this event
+                  </p>
+                </div>
+                <span className="text-xs font-mono text-slate-400 bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-lg">
+                  {recoveryActions.length} Intervention(s)
+                </span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-950/60 text-slate-400 text-xs font-semibold uppercase border-b border-slate-800">
+                    <tr>
+                      <th className="px-5 py-3">Admin</th>
+                      <th className="px-5 py-3">Action</th>
+                      <th className="px-5 py-3">Prev Status</th>
+                      <th className="px-5 py-3">Prev Attempts</th>
+                      <th className="px-5 py-3">Reason</th>
+                      <th className="px-5 py-3">Timestamp</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60 text-slate-200">
+                    {recoveryActions.map((ra) => (
+                      <tr key={ra.id} className="hover:bg-slate-800/40 transition-colors">
+                        <td className="px-5 py-4">
+                          <div className="text-xs font-bold text-white">{ra.adminName}</div>
+                          <div className="text-xs text-slate-400 font-mono">{ra.adminEmail}</div>
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className="text-[11px] font-mono font-bold text-amber-400 bg-amber-950/60 border border-amber-500/30 px-2 py-0.5 rounded">
+                            {ra.action}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded border ${getStatusBadge(ra.previousStatus)}`}>
+                            {ra.previousStatus}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 text-xs font-mono font-bold text-slate-300">
+                          {ra.previousAttemptCount}
+                        </td>
+                        <td className="px-5 py-4 text-xs text-slate-300 max-w-xs">
+                          {ra.reason}
+                        </td>
+                        <td className="px-5 py-4 text-xs font-mono text-slate-400">
+                          {new Date(ra.createdAt).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 

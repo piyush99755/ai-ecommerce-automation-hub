@@ -32,6 +32,10 @@
       "model": "OutboxEvent",
       "namespace": "public"
     },
+    "outboxRecoveryAction": {
+      "model": "OutboxRecoveryAction",
+      "namespace": "public"
+    },
     "product": {
       "model": "Product",
       "namespace": "public"
@@ -198,6 +202,21 @@
                 },
                 "to": {
                   "model": "InventoryAdjustment",
+                  "namespace": "public"
+                }
+              },
+              "outboxRecoveryActions": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "adminId"
+                  ]
+                },
+                "to": {
+                  "model": "OutboxRecoveryAction",
                   "namespace": "public"
                 }
               }
@@ -929,7 +948,23 @@
                 }
               }
             },
-            "relations": {},
+            "relations": {
+              "recoveryActions": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "outboxEventId"
+                  ]
+                },
+                "to": {
+                  "model": "OutboxRecoveryAction",
+                  "namespace": "public"
+                }
+              }
+            },
             "storage": {
               "fields": {
                 "aggregateId": {
@@ -971,6 +1006,128 @@
               },
               "namespaceId": "public",
               "table": "outboxEvent"
+            }
+          },
+          "OutboxRecoveryAction": {
+            "fields": {
+              "action": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "adminId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "outboxEventId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "previousAttemptCount": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "previousStatus": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "reason": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "admin": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "adminId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Admin",
+                  "namespace": "public"
+                }
+              },
+              "outboxEvent": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "outboxEventId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "OutboxEvent",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "action": {
+                  "column": "action"
+                },
+                "adminId": {
+                  "column": "adminId"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "outboxEventId": {
+                  "column": "outboxEventId"
+                },
+                "previousAttemptCount": {
+                  "column": "previousAttemptCount"
+                },
+                "previousStatus": {
+                  "column": "previousStatus"
+                },
+                "reason": {
+                  "column": "reason"
+                }
+              },
+              "namespaceId": "public",
+              "table": "outboxRecoveryAction"
             }
           },
           "Product": {
@@ -1901,6 +2058,138 @@
               },
               "uniques": []
             },
+            "outboxRecoveryAction": {
+              "columns": {
+                "action": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "REQUEUE"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "adminId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "expression": "gen_random_uuid()",
+                    "kind": "function"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "outboxEventId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "previousAttemptCount": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "previousStatus": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "reason": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "outboxEventId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "outboxRecoveryAction"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "outboxEvent"
+                  }
+                },
+                {
+                  "source": {
+                    "columns": [
+                      "adminId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "outboxRecoveryAction"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "admin"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "adminId",
+                    "createdAt"
+                  ],
+                  "name": "outboxRecoveryAction_adminId_createdAt_idx_5015ed56",
+                  "prefix": "outboxRecoveryAction_adminId_createdAt_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "adminId"
+                  ],
+                  "name": "outboxRecoveryAction_adminId_idx_530179db",
+                  "prefix": "outboxRecoveryAction_adminId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "outboxEventId",
+                    "createdAt"
+                  ],
+                  "name": "outboxRecoveryAction_outboxEventId_createdAt_idx_eaa78c8f",
+                  "prefix": "outboxRecoveryAction_outboxEventId_createdAt_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "outboxEventId"
+                  ],
+                  "name": "outboxRecoveryAction_outboxEventId_idx_df48a7bd",
+                  "prefix": "outboxRecoveryAction_outboxEventId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "product": {
               "columns": {
                 "category": {
@@ -2069,7 +2358,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "e5c24df0faa8ff85d4d008dcd535d6192bb610a0ef14542e7315f525d0d67d89"
+    "storageHash": "206905e651dc2c0b1eff7cac86eb29026891d71ad5a1eb15ca6165671e213edd"
   },
   "execution": {
     "executionHash": "16fbb8f45286ee8c4deea75406fd1671853abe09ddb9b8885de5b6275d511f4c",

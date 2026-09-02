@@ -1,0 +1,281 @@
+[
+  {
+    "id": "table.outboxRecoveryAction",
+    "label": "Create table \"outboxRecoveryAction\"",
+    "summary": "Creates table \"outboxRecoveryAction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "outboxRecoveryAction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"outboxRecoveryAction\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxRecoveryAction\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"outboxRecoveryAction\"",
+        "sql": "CREATE TABLE \"public\".\"outboxRecoveryAction\" (\n  \"action\" text DEFAULT 'REQUEUE' NOT NULL,\n  \"adminId\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text DEFAULT (gen_random_uuid()) NOT NULL,\n  \"outboxEventId\" text NOT NULL,\n  \"previousAttemptCount\" int4 NOT NULL,\n  \"previousStatus\" text NOT NULL,\n  \"reason\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"outboxRecoveryAction\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxRecoveryAction\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.outboxRecoveryAction.outboxRecoveryAction_adminId_createdAt_idx_5015ed56",
+    "label": "Create index \"outboxRecoveryAction_adminId_createdAt_idx_5015ed56\" on \"outboxRecoveryAction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "outboxRecoveryAction_adminId_createdAt_idx_5015ed56",
+        "table": "outboxRecoveryAction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"outboxRecoveryAction_adminId_createdAt_idx_5015ed56\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxRecoveryAction_adminId_createdAt_idx_5015ed56\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"outboxRecoveryAction_adminId_createdAt_idx_5015ed56\"",
+        "sql": "CREATE INDEX \"outboxRecoveryAction_adminId_createdAt_idx_5015ed56\" ON \"public\".\"outboxRecoveryAction\" (\"adminId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"outboxRecoveryAction_adminId_createdAt_idx_5015ed56\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxRecoveryAction_adminId_createdAt_idx_5015ed56\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.outboxRecoveryAction.outboxRecoveryAction_adminId_idx_530179db",
+    "label": "Create index \"outboxRecoveryAction_adminId_idx_530179db\" on \"outboxRecoveryAction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "outboxRecoveryAction_adminId_idx_530179db",
+        "table": "outboxRecoveryAction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"outboxRecoveryAction_adminId_idx_530179db\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxRecoveryAction_adminId_idx_530179db\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"outboxRecoveryAction_adminId_idx_530179db\"",
+        "sql": "CREATE INDEX \"outboxRecoveryAction_adminId_idx_530179db\" ON \"public\".\"outboxRecoveryAction\" (\"adminId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"outboxRecoveryAction_adminId_idx_530179db\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxRecoveryAction_adminId_idx_530179db\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.outboxRecoveryAction.outboxRecoveryAction_outboxEventId_createdAt_idx_eaa78c8f",
+    "label": "Create index \"outboxRecoveryAction_outboxEventId_createdAt_idx_eaa78c8f\" on \"outboxRecoveryAction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "outboxRecoveryAction_outboxEventId_createdAt_idx_eaa78c8f",
+        "table": "outboxRecoveryAction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"outboxRecoveryAction_outboxEventId_createdAt_idx_eaa78c8f\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxRecoveryAction_outboxEventId_createdAt_idx_eaa78c8f\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"outboxRecoveryAction_outboxEventId_createdAt_idx_eaa78c8f\"",
+        "sql": "CREATE INDEX \"outboxRecoveryAction_outboxEventId_createdAt_idx_eaa78c8f\" ON \"public\".\"outboxRecoveryAction\" (\"outboxEventId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"outboxRecoveryAction_outboxEventId_createdAt_idx_eaa78c8f\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxRecoveryAction_outboxEventId_createdAt_idx_eaa78c8f\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.outboxRecoveryAction.outboxRecoveryAction_outboxEventId_idx_df48a7bd",
+    "label": "Create index \"outboxRecoveryAction_outboxEventId_idx_df48a7bd\" on \"outboxRecoveryAction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "outboxRecoveryAction_outboxEventId_idx_df48a7bd",
+        "table": "outboxRecoveryAction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"outboxRecoveryAction_outboxEventId_idx_df48a7bd\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxRecoveryAction_outboxEventId_idx_df48a7bd\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"outboxRecoveryAction_outboxEventId_idx_df48a7bd\"",
+        "sql": "CREATE INDEX \"outboxRecoveryAction_outboxEventId_idx_df48a7bd\" ON \"public\".\"outboxRecoveryAction\" (\"outboxEventId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"outboxRecoveryAction_outboxEventId_idx_df48a7bd\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxRecoveryAction_outboxEventId_idx_df48a7bd\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.outboxRecoveryAction.outboxRecoveryAction_outboxEventId_fkey",
+    "label": "Add foreign key \"outboxRecoveryAction_outboxEventId_fkey\" on \"outboxRecoveryAction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "outboxRecoveryAction_outboxEventId_fkey",
+        "table": "outboxRecoveryAction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"outboxRecoveryAction_outboxEventId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "outboxRecoveryAction_outboxEventId_fkey",
+          "public",
+          "\"public\".\"outboxRecoveryAction\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"outboxRecoveryAction_outboxEventId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"outboxRecoveryAction\"\nADD CONSTRAINT \"outboxRecoveryAction_outboxEventId_fkey\"\nFOREIGN KEY (\"outboxEventId\")\nREFERENCES \"public\".\"outboxEvent\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"outboxRecoveryAction_outboxEventId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "outboxRecoveryAction_outboxEventId_fkey",
+          "public",
+          "\"public\".\"outboxRecoveryAction\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.outboxRecoveryAction.outboxRecoveryAction_adminId_fkey",
+    "label": "Add foreign key \"outboxRecoveryAction_adminId_fkey\" on \"outboxRecoveryAction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "outboxRecoveryAction_adminId_fkey",
+        "table": "outboxRecoveryAction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"outboxRecoveryAction_adminId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "outboxRecoveryAction_adminId_fkey",
+          "public",
+          "\"public\".\"outboxRecoveryAction\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"outboxRecoveryAction_adminId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"outboxRecoveryAction\"\nADD CONSTRAINT \"outboxRecoveryAction_adminId_fkey\"\nFOREIGN KEY (\"adminId\")\nREFERENCES \"public\".\"admin\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"outboxRecoveryAction_adminId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "outboxRecoveryAction_adminId_fkey",
+          "public",
+          "\"public\".\"outboxRecoveryAction\""
+        ]
+      }
+    ]
+  }
+]

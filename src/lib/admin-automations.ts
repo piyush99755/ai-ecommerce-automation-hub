@@ -64,6 +64,17 @@ export interface ConsumerEventRecord {
   lastError: string | null;
 }
 
+export interface RecoveryActionRecord {
+  id: string;
+  adminName: string;
+  adminEmail: string;
+  action: string;
+  previousStatus: string;
+  previousAttemptCount: number;
+  reason: string;
+  createdAt: string;
+}
+
 export interface AutomationTimelineItem {
   id: string;
   title: string;
@@ -91,6 +102,7 @@ export interface DetailedAutomationWorkspaceData {
   relatedOrder: RelatedOrderSummary | null;
   relatedCustomer: RelatedCustomerSummary | null;
   consumerEvents: ConsumerEventRecord[];
+  recoveryActions: RecoveryActionRecord[];
   timeline: AutomationTimelineItem[];
   evidenceNote: string;
 }
@@ -128,7 +140,6 @@ export function sanitizeLastError(rawError: string | null | undefined): string |
   text = text.replace(/https?:\/\/[^\s"']+/gi, (urlStr) => {
     try {
       const parsed = new URL(urlStr);
-      // Keep hostname for operational context, redact path & query if secret-bearing
       if (parsed.search || parsed.pathname.length > 1) {
         return `${parsed.protocol}//${parsed.host}/[REDACTED_URL_PATH]`;
       }
@@ -328,7 +339,7 @@ export async function fetchOutboxEventsPage(options: {
 }
 
 /**
- * Fetches detailed automation event workspace data including payload, failure context, timeline, and related entities.
+ * Fetches detailed automation event workspace data including payload, failure context, recovery history, timeline, and related entities.
  */
 export async function fetchDetailedAutomationWorkspace(
   eventId: string
@@ -338,14 +349,17 @@ export async function fetchDetailedAutomationWorkspace(
     return null;
   }
 
-  // Concurrently query related orders, customers, and consumer events
-  const [orders, customers, consumerEvents] = await Promise.all([
+  // Concurrently query related orders, customers, consumer events, recovery actions, and admins
+  const [orders, customers, consumerEvents, recoveryActionsRaw, admins] = await Promise.all([
     db.orm.public.Order.all(),
     db.orm.public.Customer.all(),
     db.orm.public.ConsumerEvent.where({ eventId: event.id }).all(),
+    db.orm.public.OutboxRecoveryAction.where({ outboxEventId: event.id }).all(),
+    db.orm.public.Admin.all(),
   ]);
 
   const customerMap = new Map(customers.map((c) => [c.id, c]));
+  const adminMap = new Map(admins.map((a) => [a.id, a]));
 
   // Related order resolution
   let relatedOrder: RelatedOrderSummary | null = null;
@@ -390,6 +404,25 @@ export async function fetchDetailedAutomationWorkspace(
 
   mappedConsumerEvents.sort(
     (a, b) => new Date(b.claimedAt).getTime() - new Date(a.claimedAt).getTime()
+  );
+
+  // Map recovery action records
+  const mappedRecoveryActions: RecoveryActionRecord[] = recoveryActionsRaw.map((ra) => {
+    const admin = adminMap.get(ra.adminId);
+    return {
+      id: ra.id,
+      adminName: admin?.name || 'Admin',
+      adminEmail: admin?.email || 'admin@internal',
+      action: ra.action,
+      previousStatus: ra.previousStatus,
+      previousAttemptCount: ra.previousAttemptCount,
+      reason: ra.reason,
+      createdAt: ra.createdAt,
+    };
+  });
+
+  mappedRecoveryActions.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
   // Sanitize payload JSON
@@ -459,7 +492,7 @@ export async function fetchDetailedAutomationWorkspace(
   timeline.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   const evidenceNote =
-    'Timeline and operational metrics are derived strictly from authoritative PostgreSQL OutboxEvent and ConsumerEvent tables. Field timestamps represent persisted execution snapshots.';
+    'Timeline, recovery history, and operational metrics are derived strictly from authoritative PostgreSQL OutboxEvent, ConsumerEvent, and OutboxRecoveryAction tables. Field timestamps represent persisted execution snapshots.';
 
   return {
     event: {
@@ -480,6 +513,7 @@ export async function fetchDetailedAutomationWorkspace(
     relatedOrder,
     relatedCustomer,
     consumerEvents: mappedConsumerEvents,
+    recoveryActions: mappedRecoveryActions,
     timeline,
     evidenceNote,
   };

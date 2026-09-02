@@ -28,14 +28,15 @@ enum AdminRole {
 }
 
 model Admin {
-  id                   String                @id @default(dbgenerated("gen_random_uuid()"))
-  email                String                @unique
-  passwordHash         String
-  name                 String
-  role                 AdminRole             @default(ADMIN)
-  inventoryAdjustments InventoryAdjustment[]
-  createdAt            TimestamptzString     @default(now())
-  updatedAt            temporal.updatedAtString()
+  id                    String                 @id @default(dbgenerated("gen_random_uuid()"))
+  email                 String                 @unique
+  passwordHash          String
+  name                  String
+  role                  AdminRole              @default(ADMIN)
+  inventoryAdjustments  InventoryAdjustment[]
+  outboxRecoveryActions OutboxRecoveryAction[]
+  createdAt             TimestamptzString      @default(now())
+  updatedAt             temporal.updatedAtString()
 }
 
 model Product {
@@ -119,21 +120,38 @@ model StripeEvent {
 }
 
 model OutboxEvent {
-  id            String            @id @default(dbgenerated("gen_random_uuid()"))
-  eventType     String
-  aggregateType String
-  aggregateId   String
-  payload       Json
-  status        OutboxStatus      @default(PENDING)
-  attemptCount  Int               @default(0)
-  nextAttemptAt TimestamptzString?
-  lastAttemptAt TimestamptzString?
-  deliveredAt   TimestamptzString?
-  lastError     String?
-  createdAt     TimestamptzString @default(now())
+  id              String                 @id @default(dbgenerated("gen_random_uuid()"))
+  eventType       String
+  aggregateType   String
+  aggregateId     String
+  payload         Json
+  status          OutboxStatus           @default(PENDING)
+  attemptCount    Int                    @default(0)
+  nextAttemptAt   TimestamptzString?
+  lastAttemptAt   TimestamptzString?
+  deliveredAt     TimestamptzString?
+  lastError       String?
+  recoveryActions OutboxRecoveryAction[]
+  createdAt       TimestamptzString      @default(now())
 
   @@index([status, nextAttemptAt])
   @@index([aggregateType, aggregateId])
+}
+
+model OutboxRecoveryAction {
+  id                   String            @id @default(dbgenerated("gen_random_uuid()"))
+  outboxEvent          OutboxEvent       @relation(fields: [outboxEventId], references: [id])
+  outboxEventId        String
+  admin                Admin             @relation(fields: [adminId], references: [id])
+  adminId              String
+  action               String            @default("REQUEUE")
+  previousStatus       String
+  previousAttemptCount Int
+  reason               String
+  createdAt            TimestamptzString @default(now())
+
+  @@index([outboxEventId, createdAt])
+  @@index([adminId, createdAt])
 }
 
 model ConsumerEvent {
