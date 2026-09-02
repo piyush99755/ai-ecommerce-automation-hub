@@ -28,28 +28,30 @@ enum AdminRole {
 }
 
 model Admin {
-  id           String            @id @default(dbgenerated("gen_random_uuid()"))
-  email        String            @unique
-  passwordHash String
-  name         String
-  role         AdminRole         @default(ADMIN)
-  createdAt    TimestamptzString @default(now())
-  updatedAt    temporal.updatedAtString()
+  id                   String                @id @default(dbgenerated("gen_random_uuid()"))
+  email                String                @unique
+  passwordHash         String
+  name                 String
+  role                 AdminRole             @default(ADMIN)
+  inventoryAdjustments InventoryAdjustment[]
+  createdAt            TimestamptzString     @default(now())
+  updatedAt            temporal.updatedAtString()
 }
 
 model Product {
-  id                String            @id @default(dbgenerated("gen_random_uuid()"))
-  name              String
-  slug              String            @unique
-  description       String
-  priceCents        Int
-  stock             Int
-  lowStockThreshold Int               @default(5)
-  category          String
-  imageUrl          String?
-  orderItems        OrderItem[]
-  createdAt         TimestamptzString @default(now())
-  updatedAt         temporal.updatedAtString()
+  id                   String                @id @default(dbgenerated("gen_random_uuid()"))
+  name                 String
+  slug                 String                @unique
+  description          String
+  priceCents           Int
+  stock                Int
+  lowStockThreshold    Int                   @default(5)
+  category             String
+  imageUrl             String?
+  orderItems           OrderItem[]
+  inventoryAdjustments InventoryAdjustment[]
+  createdAt            TimestamptzString     @default(now())
+  updatedAt            temporal.updatedAtString()
 
   @@index([category])
 }
@@ -92,6 +94,22 @@ model OrderItem {
   productId      String
   quantity       Int
   unitPriceCents Int
+}
+
+model InventoryAdjustment {
+  id            String            @id @default(dbgenerated("gen_random_uuid()"))
+  product       Product           @relation(fields: [productId], references: [id])
+  productId     String
+  admin         Admin             @relation(fields: [adminId], references: [id])
+  adminId       String
+  previousStock Int
+  newStock      Int
+  delta         Int
+  reason        String
+  createdAt     TimestamptzString @default(now())
+
+  @@index([productId, createdAt])
+  @@index([adminId, createdAt])
 }
 
 model StripeEvent {

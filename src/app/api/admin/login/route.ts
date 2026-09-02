@@ -55,14 +55,26 @@ export async function POST(request: Request) {
       },
     });
 
-    // Set HTTP-only session cookie
+    // Clear legacy cookie scoped to path: '/admin' during migration period to avoid duplicate session cookies
+    response.cookies.set({
+      name: COOKIE_NAME,
+      value: '',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/admin',
+      maxAge: 0,
+      expires: new Date(0),
+    });
+
+    // Set canonical HTTP-only session cookie (path: '/') so it applies to /admin/* and /api/admin/*
     response.cookies.set({
       name: COOKIE_NAME,
       value: token,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      path: '/admin',
+      path: '/',
       maxAge: 86400, // 24 hours
     });
 

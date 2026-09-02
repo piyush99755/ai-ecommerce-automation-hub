@@ -4,6 +4,8 @@ import { getAuthenticatedAdminServer } from '@/lib/admin-auth';
 import { fetchDetailedInventoryWorkspace } from '@/lib/inventory-workspace';
 import { formatCurrencyCents, InventoryState } from '@/lib/admin-inventory';
 import { InventoryActivityTimeline } from '@/components/admin/InventoryActivityTimeline';
+import { AdjustStockForm } from '@/components/admin/AdjustStockForm';
+import { InventoryAdjustmentTable } from '@/components/admin/InventoryAdjustmentTable';
 
 export default async function AdminProductInventoryDetailPage({
   params,
@@ -35,7 +37,7 @@ export default async function AdminProductInventoryDetailPage({
     );
   }
 
-  const { product, orderUsage, timeline, schemaNote } = workspace;
+  const { product, orderUsage, adjustments, timeline, schemaNote } = workspace;
 
   const getStateBadge = (s: InventoryState) => {
     switch (s) {
@@ -108,10 +110,17 @@ export default async function AdminProductInventoryDetailPage({
         </div>
       </div>
 
-      {/* Main Grid: Order Usage Table & Activity Timeline */}
+      {/* Audited Manual Stock Adjust Interface */}
+      <AdjustStockForm productId={product.id} currentStock={product.stock} />
+
+      {/* Main Grid: History Tables & Activity Timeline */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column (2 Cols): Order Usage Table */}
+        {/* Left Column (2 Cols): Adjustment History & Order Usage */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Manual Admin Adjustment History Table */}
+          <InventoryAdjustmentTable adjustments={adjustments} />
+
+          {/* Order Consumption History Table */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg">
             <div className="p-5 border-b border-slate-800">
               <h3 className="text-base font-bold text-white">Order Line Item History</h3>
@@ -178,16 +187,13 @@ export default async function AdminProductInventoryDetailPage({
             )}
           </div>
 
-          {/* Audit Limitation Note Panel */}
+          {/* Audit Schema Note Panel */}
           <div className="p-4 bg-slate-950/60 border border-slate-800 rounded-2xl text-xs text-slate-400 space-y-2">
             <div className="font-bold text-white flex items-center space-x-2">
               <span>📋</span>
-              <span>Inventory Audit Schema Note</span>
+              <span>Inventory Audit Architecture</span>
             </div>
             <p className="leading-relaxed">{schemaNote}</p>
-            <div className="pt-2 border-t border-slate-800 text-[11px] text-slate-500">
-              <span className="font-semibold text-indigo-400">Phase 5B Proposal:</span> To support manual admin stock adjustments, an explicit <code className="text-slate-300 font-mono">InventoryAdjustment</code> audit model (<code className="text-slate-300 font-mono">id, productId, adminId, previousStock, newStock, delta, reason, createdAt</code>) with a real <code className="text-slate-300 font-mono">Admin</code> relation is recommended to prevent un-audited stock mutations.
-            </div>
           </div>
         </div>
 

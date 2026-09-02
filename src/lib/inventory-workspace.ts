@@ -15,12 +15,24 @@ export interface InventoryOrderUsageItem {
   createdAt: string;
 }
 
+export interface InventoryAdjustmentItem {
+  id: string;
+  adminId: string;
+  adminName: string;
+  adminEmail: string;
+  previousStock: number;
+  newStock: number;
+  delta: number;
+  reason: string;
+  createdAt: string;
+}
+
 export interface InventoryTimelineItem {
   id: string;
   title: string;
   timestamp: string;
   detail: string;
-  type: 'ALLOCATION' | 'THRESHOLD_TRANSITION' | 'INCLUDED_IN_ORDER';
+  type: 'ALLOCATION' | 'THRESHOLD_TRANSITION' | 'INCLUDED_IN_ORDER' | 'MANUAL_ADJUSTMENT';
 }
 
 export interface DetailedInventoryWorkspaceData {
@@ -39,6 +51,7 @@ export interface DetailedInventoryWorkspaceData {
     updatedAt: string;
   };
   orderUsage: InventoryOrderUsageItem[];
+  adjustments: InventoryAdjustmentItem[];
   timeline: InventoryTimelineItem[];
   schemaNote: string;
 }
@@ -51,16 +64,19 @@ export async function fetchDetailedInventoryWorkspace(
     return null;
   }
 
-  // Fetch order items, orders, customers, and outbox events in parallel
-  const [orderItems, orders, customers, outboxEvents] = await Promise.all([
+  // Fetch order items, orders, customers, outbox events, adjustments, and admins concurrently
+  const [orderItems, orders, customers, outboxEvents, rawAdjustments, admins] = await Promise.all([
     db.orm.public.OrderItem.where({ productId }).all(),
     db.orm.public.Order.all(),
     db.orm.public.Customer.all(),
     db.orm.public.OutboxEvent.all(),
+    db.orm.public.InventoryAdjustment.where({ productId }).all(),
+    db.orm.public.Admin.all(),
   ]);
 
   const orderMap = new Map(orders.map((o) => [o.id, o]));
   const customerMap = new Map(customers.map((c) => [c.id, c]));
+  const adminMap = new Map(admins.map((a) => [a.id, a]));
 
   // Index INVENTORY_UPDATED outbox events by order ID
   const inventoryOutboxByOrder = new Map<string, typeof outboxEvents[0]>();
@@ -70,7 +86,7 @@ export async function fetchDetailedInventoryWorkspace(
     }
   }
 
-  // Map order usages containing this product, clearly distinguishing ordered quantity from inventory decrements
+  // Map order usages containing this product
   const orderUsage: InventoryOrderUsageItem[] = orderItems.map((item) => {
     const o = orderMap.get(item.orderId);
     const cust = o ? customerMap.get(o.customerId) : null;
@@ -106,9 +122,29 @@ export async function fetchDetailedInventoryWorkspace(
   // Sort order usage newest first
   orderUsage.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
+  // Map manual inventory adjustments
+  const adjustments: InventoryAdjustmentItem[] = rawAdjustments.map((adj) => {
+    const admin = adminMap.get(adj.adminId);
+    return {
+      id: adj.id,
+      adminId: adj.adminId,
+      adminName: admin?.name || 'System Admin',
+      adminEmail: admin?.email || 'admin@store.internal',
+      previousStock: adj.previousStock,
+      newStock: adj.newStock,
+      delta: adj.delta,
+      reason: adj.reason,
+      createdAt: adj.createdAt,
+    };
+  });
+
+  // Sort adjustments newest first
+  adjustments.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
   // Construct Inventory Activity Timeline strictly from persisted evidence
   const timeline: InventoryTimelineItem[] = [];
 
+  // 1. Order consumption events
   for (const usage of orderUsage) {
     const invEvent = inventoryOutboxByOrder.get(usage.orderId);
 
@@ -123,7 +159,6 @@ export async function fetchDetailedInventoryWorkspace(
         type: 'ALLOCATION',
       });
 
-      // Check if this exact inventory decrement event caused stock to cross into the low-stock range
       try {
         const payload = typeof invEvent.payload === 'string' ? JSON.parse(invEvent.payload) : invEvent.payload;
         if (Array.isArray(payload?.lowStockTransitions) && payload.lowStockTransitions.includes(product.id)) {
@@ -136,10 +171,9 @@ export async function fetchDetailedInventoryWorkspace(
           });
         }
       } catch {
-        // Ignore JSON parse errors safely
+        // Ignore parse errors safely
       }
     } else {
-      // OrderItem exists but stock decrement transaction has not occurred (e.g. unpaid PENDING order)
       timeline.push({
         id: `inv-incl-${usage.orderId}`,
         title: `Included in Order (${usage.shortId})`,
@@ -150,13 +184,25 @@ export async function fetchDetailedInventoryWorkspace(
     }
   }
 
+  // 2. Manual Admin Adjustments
+  for (const adj of adjustments) {
+    const sign = adj.delta > 0 ? '+' : '';
+    timeline.push({
+      id: `inv-adj-${adj.id}`,
+      title: `Manual Admin Adjustment (${sign}${adj.delta})`,
+      timestamp: adj.createdAt,
+      detail: `Admin ${adj.adminName} (${adj.adminEmail}) adjusted stock: ${adj.previousStock} → ${adj.newStock} units. Reason: "${adj.reason}".`,
+      type: 'MANUAL_ADJUSTMENT',
+    });
+  }
+
   // Sort timeline chronologically (newest first for activity feed)
   timeline.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   const state = getInventoryState(product.stock, product.lowStockThreshold);
 
   const schemaNote =
-    'Current PostgreSQL schema stores live stock snapshots on the Product model. The atomic fulfillment decrement path prevents stock from going below zero during normal automated order processing by requiring stock >= requested quantity in the UPDATE predicate. Inventory decrements and threshold transitions are derived strictly from committed INVENTORY_UPDATED outbox event payloads (aggregateType = Order).';
+    'Live stock snapshot is persisted on the Product table. Manual admin adjustments are atomically committed to the InventoryAdjustment audit table in PostgreSQL transactions with row locking.';
 
   return {
     product: {
@@ -174,6 +220,7 @@ export async function fetchDetailedInventoryWorkspace(
       updatedAt: product.updatedAt,
     },
     orderUsage,
+    adjustments,
     timeline,
     schemaNote,
   };
