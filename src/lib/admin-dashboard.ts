@@ -44,10 +44,7 @@ export interface DashboardMetricsData {
  * Aggregates dashboard metrics from authoritative persisted PostgreSQL state.
  *
  * NOTE ON SCALE:
- * Current implementation uses concurrent *.all() queries + in-memory aggregation,
- * which is optimal for portfolio/demo scale datasets (< 10,000 records).
- * For large production scale (> 100,000 records), this layer should be migrated to direct
- * database COUNT/SUM/filter/pagination SQL queries to minimize network payload size and memory footprint.
+ * Current in-memory aggregation is appropriate for the present demo dataset; larger deployments should use database-side aggregation and pagination.
  */
 export async function fetchDashboardMetrics(): Promise<DashboardMetricsData> {
   // Execute independent database queries concurrently in parallel
