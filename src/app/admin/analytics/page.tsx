@@ -4,16 +4,20 @@ import { getAuthenticatedAdminServer } from '@/lib/admin-auth';
 import { fetchAnalyticsWorkspace, formatCurrencyCents } from '@/lib/admin-analytics';
 import { AnalyticsDateFilter } from '@/components/admin/AnalyticsDateFilter';
 import { AnalyticsRevenueChart } from '@/components/admin/AnalyticsRevenueChart';
+import { authorizeAdminCapability } from '@/lib/admin-rbac';
+import { AccessDenied } from '@/components/admin/AccessDenied';
 
 export default async function AdminAnalyticsPage({
   searchParams,
 }: {
   searchParams: Promise<{ range?: string }>;
 }) {
-  // 1. Authentication Security Guard: Must execute BEFORE any database analytics queries!
-  const session = await getAuthenticatedAdminServer();
-  if (!session) {
-    redirect('/admin/login');
+  const auth = await authorizeAdminCapability('VIEW_ANALYTICS');
+  if (!auth.authorized) {
+    if (auth.status === 401) {
+      redirect('/admin/login');
+    }
+    return <AccessDenied error={auth.error} capability="VIEW_ANALYTICS" />;
   }
 
   const { range } = await searchParams;

@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { getAuthenticatedAdminServer } from '@/lib/admin-auth';
 import { fetchAdminCustomers, formatCurrencyCents } from '@/lib/admin-customers';
 import { CustomersTableSearchControls } from '@/components/admin/CustomersTableSearchControls';
+import { authorizeAdminCapability } from '@/lib/admin-rbac';
+import { AccessDenied } from '@/components/admin/AccessDenied';
 
 export default async function AdminCustomersPage({
   searchParams,
@@ -12,10 +14,12 @@ export default async function AdminCustomersPage({
     page?: string;
   }>;
 }) {
-  // Server-side authorization check before querying customer records or rendering data
-  const session = await getAuthenticatedAdminServer();
-  if (!session) {
-    redirect('/admin/login');
+  const auth = await authorizeAdminCapability('VIEW_CUSTOMERS');
+  if (!auth.authorized) {
+    if (auth.status === 401) {
+      redirect('/admin/login');
+    }
+    return <AccessDenied error={auth.error} capability="VIEW_CUSTOMERS" />;
   }
 
   const { q, page } = await searchParams;

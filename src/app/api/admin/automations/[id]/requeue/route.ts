@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { NextResponse } from 'next/server';
-import { getAuthenticatedAdminServer } from '@/lib/admin-auth';
+import { authorizeAdminCapability } from '@/lib/admin-rbac';
+import { recordAdminAuditLog } from '@/lib/admin-audit';
 import pg from 'pg';
 
 const pool = new pg.Pool({
@@ -11,17 +12,6 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-/**
- * Approved replay event types based on live evidence and state-aware policy:
- * - PAYMENT_SUCCEEDED: Requeue allowed ONLY if related order is in PENDING or PROCESSING status.
- * - ORDER_PROCESSING_NOTIFICATION: Requeue allowed ONLY if consumerId 'email-notifier' has no processing lock.
- * - ORDER_SHIPPED_NOTIFICATION: Requeue allowed ONLY if consumerId 'email-notifier' has no processing lock.
- * - ORDER_DELIVERED_NOTIFICATION: Requeue allowed ONLY if consumerId 'email-notifier' has no processing lock.
- *
- * BLOCKED:
- * - INVENTORY_UPDATED: Live n8n workflow lacks claim node before Discord side effect.
- * - ORDER_STATUS_UPDATED: Live n8n shipping workflow lacks claim node before Discord side effect.
- */
 const APPROVED_REPLAY_EVENT_TYPES = new Set([
   'PAYMENT_SUCCEEDED',
   'ORDER_PROCESSING_NOTIFICATION',
@@ -31,8 +21,6 @@ const APPROVED_REPLAY_EVENT_TYPES = new Set([
 
 /**
  * Validates CSRF same-origin policy.
- * Production: Requires APP_URL or NEXT_PUBLIC_APP_URL and fails closed if missing or mismatched.
- * Development: Allows localhost / Host header fallbacks.
  */
 function validateSameOrigin(request: Request): boolean {
   const originHeader = request.headers.get('origin');
@@ -76,7 +64,7 @@ function validateSameOrigin(request: Request): boolean {
         return true;
       }
     } catch {
-      // Ignore invalid dev URL
+      // Ignore
     }
   }
 
@@ -101,14 +89,13 @@ function validateSameOrigin(request: Request): boolean {
 }
 
 export async function POST(request: Request, { params }: RouteContext) {
-  // 1. Authenticate Admin Session Server-Side
-  const session = await getAuthenticatedAdminServer();
-  if (!session) {
-    return NextResponse.json(
-      { error: 'Unauthorized: Valid admin session required.' },
-      { status: 401 }
-    );
+  // 1. Central RBAC Authorization Guard (Server Authoritative)
+  const auth = await authorizeAdminCapability('REQUEUE_AUTOMATION');
+  if (!auth.authorized) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
+
+  const { admin } = auth;
 
   // 2. Enforce Strict CSRF / Same-Origin Policy
   if (!validateSameOrigin(request)) {
@@ -146,7 +133,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       );
     }
 
-    // 5. Execute Atomic PostgreSQL Transaction with Row Locking & State-Aware Guards
+    // 5. Execute Atomic PostgreSQL Transaction (Mutation + Specialized Audit + Central AdminAuditLog)
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
@@ -164,7 +151,6 @@ export async function POST(request: Request, { params }: RouteContext) {
 
       const eventRow = eventRes.rows[0];
 
-      // Recovery Eligibility Check 1: Only FAILED status can be requeued
       if (eventRow.status !== 'FAILED') {
         await client.query('ROLLBACK');
         return NextResponse.json(
@@ -177,7 +163,6 @@ export async function POST(request: Request, { params }: RouteContext) {
         );
       }
 
-      // Recovery Eligibility Check 2: Global Event Type Allowlist Check
       if (!APPROVED_REPLAY_EVENT_TYPES.has(eventRow.eventType)) {
         await client.query('ROLLBACK');
         return NextResponse.json(
@@ -190,7 +175,6 @@ export async function POST(request: Request, { params }: RouteContext) {
         );
       }
 
-      // Recovery Eligibility Check 3: PAYMENT_SUCCEEDED Order State Usefulness Guard
       if (eventRow.eventType === 'PAYMENT_SUCCEEDED') {
         const orderRes = await client.query(
           'SELECT status FROM "order" WHERE id = $1',
@@ -213,7 +197,6 @@ export async function POST(request: Request, { params }: RouteContext) {
         }
       }
 
-      // Recovery Eligibility Check 4: Email Notification ConsumerEvent Lock Guard
       if (
         eventRow.eventType === 'ORDER_PROCESSING_NOTIFICATION' ||
         eventRow.eventType === 'ORDER_SHIPPED_NOTIFICATION' ||
@@ -246,12 +229,6 @@ export async function POST(request: Request, { params }: RouteContext) {
       const previousStatus = eventRow.status;
       const previousAttemptCount = eventRow.attemptCount;
 
-      // Requeue Transition:
-      // - status -> PENDING
-      // - attemptCount -> 0 (Grants a fresh 5-attempt retry budget for background worker)
-      // - nextAttemptAt -> NOW() (Immediately eligible for worker pick-up)
-      // - PRESERVE previous lastAttemptAt (Do NOT overwrite with human requeue time)
-      // - PRESERVE previous lastError (Retain forensic error context until worker retries)
       await client.query(
         `UPDATE "outboxEvent"
          SET status = 'PENDING',
@@ -261,12 +238,30 @@ export async function POST(request: Request, { params }: RouteContext) {
         [eventId]
       );
 
-      // Insert OutboxRecoveryAction Audit Record in the SAME transaction
+      // 1. Insert OutboxRecoveryAction specialized audit record
       const auditRes = await client.query(
         `INSERT INTO "outboxRecoveryAction" (id, "outboxEventId", "adminId", action, "previousStatus", "previousAttemptCount", reason, "createdAt")
          VALUES (gen_random_uuid(), $1, $2, 'REQUEUE', $3, $4, $5, NOW())
          RETURNING id, "createdAt"`,
-        [eventId, session.id, previousStatus, previousAttemptCount, cleanReason]
+        [eventId, admin.id, previousStatus, previousAttemptCount, cleanReason]
+      );
+
+      // 2. Insert Centralized AdminAuditLog in SAME transaction
+      await recordAdminAuditLog(
+        {
+          adminId: admin.id,
+          action: 'OUTBOX_EVENT_REQUEUED',
+          entityType: 'OutboxEvent',
+          entityId: eventId,
+          metadata: {
+            outboxEventId: eventId,
+            eventType: eventRow.eventType,
+            previousStatus,
+            previousAttemptCount,
+            recoveryReason: cleanReason,
+          },
+        },
+        client
       );
 
       await client.query('COMMIT');
@@ -280,9 +275,9 @@ export async function POST(request: Request, { params }: RouteContext) {
           recoveryAction: {
             id: auditRecord.id,
             outboxEventId: eventId,
-            adminId: session.id,
-            adminEmail: session.email,
-            adminName: session.name,
+            adminId: admin.id,
+            adminEmail: admin.email,
+            adminName: admin.name,
             action: 'REQUEUE',
             previousStatus,
             previousAttemptCount,

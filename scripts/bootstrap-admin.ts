@@ -37,7 +37,7 @@ async function main() {
         email,
         passwordHash,
         name,
-        role: 'ADMIN',
+        role: 'SUPER_ADMIN',
       });
     console.log(`✓ Created new admin account: ${created.id}`);
   }

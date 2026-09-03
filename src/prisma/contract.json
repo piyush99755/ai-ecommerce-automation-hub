@@ -8,6 +8,10 @@
       "model": "Admin",
       "namespace": "public"
     },
+    "adminAuditLog": {
+      "model": "AdminAuditLog",
+      "namespace": "public"
+    },
     "consumerEvent": {
       "model": "ConsumerEvent",
       "namespace": "public"
@@ -53,8 +57,16 @@
             "codecId": "pg/text@1",
             "members": [
               {
-                "name": "ADMIN",
-                "value": "ADMIN"
+                "name": "SUPER_ADMIN",
+                "value": "SUPER_ADMIN"
+              },
+              {
+                "name": "OPERATIONS",
+                "value": "OPERATIONS"
+              },
+              {
+                "name": "SUPPORT",
+                "value": "SUPPORT"
               }
             ]
           },
@@ -190,6 +202,21 @@
               }
             },
             "relations": {
+              "auditLogs": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "adminId"
+                  ]
+                },
+                "to": {
+                  "model": "AdminAuditLog",
+                  "namespace": "public"
+                }
+              },
               "inventoryAdjustments": {
                 "cardinality": "1:N",
                 "on": {
@@ -247,6 +274,103 @@
               },
               "namespaceId": "public",
               "table": "admin"
+            }
+          },
+          "AdminAuditLog": {
+            "fields": {
+              "action": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "adminId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "entityId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "entityType": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "metadata": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/json@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "admin": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "adminId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Admin",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "action": {
+                  "column": "action"
+                },
+                "adminId": {
+                  "column": "adminId"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "entityId": {
+                  "column": "entityId"
+                },
+                "entityType": {
+                  "column": "entityType"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "metadata": {
+                  "column": "metadata"
+                }
+              },
+              "namespaceId": "public",
+              "table": "adminAuditLog"
             }
           },
           "ConsumerEvent": {
@@ -1335,8 +1459,8 @@
             "admin": {
               "checks": [
                 {
-                  "expression": "\"role\" IN ('ADMIN')",
-                  "name": "admin_role_check_d64e1afa",
+                  "expression": "\"role\" IN ('SUPER_ADMIN', 'OPERATIONS', 'SUPPORT')",
+                  "name": "admin_role_check_a968123a",
                   "prefix": "admin_role_check"
                 }
               ],
@@ -1378,7 +1502,7 @@
                   "codecId": "pg/text@1",
                   "default": {
                     "kind": "literal",
-                    "value": "ADMIN"
+                    "value": "SUPER_ADMIN"
                   },
                   "nativeType": "text",
                   "nullable": false,
@@ -1409,6 +1533,116 @@
                   ]
                 }
               ]
+            },
+            "adminAuditLog": {
+              "columns": {
+                "action": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "adminId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "entityId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "entityType": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "expression": "gen_random_uuid()",
+                    "kind": "function"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "metadata": {
+                  "codecId": "pg/json@1",
+                  "nativeType": "json",
+                  "nullable": true
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "adminId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "adminAuditLog"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "admin"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "action",
+                    "createdAt"
+                  ],
+                  "name": "adminAuditLog_action_createdAt_idx_a6d20b4b",
+                  "prefix": "adminAuditLog_action_createdAt_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "adminId",
+                    "createdAt"
+                  ],
+                  "name": "adminAuditLog_adminId_createdAt_idx_5015ed56",
+                  "prefix": "adminAuditLog_adminId_createdAt_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "adminId"
+                  ],
+                  "name": "adminAuditLog_adminId_idx_530179db",
+                  "prefix": "adminAuditLog_adminId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "entityType",
+                    "entityId",
+                    "createdAt"
+                  ],
+                  "name": "adminAuditLog_entityType_entityId_createdAt_idx_e9eb579f",
+                  "prefix": "adminAuditLog_entityType_entityId_createdAt_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
             },
             "consumerEvent": {
               "columns": {
@@ -2320,7 +2554,9 @@
             "AdminRole": {
               "kind": "valueSet",
               "values": [
-                "ADMIN"
+                "SUPER_ADMIN",
+                "OPERATIONS",
+                "SUPPORT"
               ]
             },
             "OrderStatus": {
@@ -2358,7 +2594,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "206905e651dc2c0b1eff7cac86eb29026891d71ad5a1eb15ca6165671e213edd"
+    "storageHash": "ca164d2cc336399bccb3f9707964a83b7d1153daab64f26fc562a8867366a9a2"
   },
   "execution": {
     "executionHash": "16fbb8f45286ee8c4deea75406fd1671853abe09ddb9b8885de5b6275d511f4c",

@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { NextResponse } from 'next/server';
-import { getAuthenticatedAdminServer } from '@/lib/admin-auth';
+import { authorizeAdminCapability } from '@/lib/admin-rbac';
+import { recordAdminAuditLog } from '@/lib/admin-audit';
 import pg from 'pg';
 
 const pool = new pg.Pool({
@@ -13,8 +14,6 @@ interface RouteContext {
 
 /**
  * Enforces strict CSRF same-origin protection for state-changing admin endpoints.
- * In production: Requires configured APP_URL / NEXT_PUBLIC_APP_URL and fails closed if missing or mismatched.
- * In development: Allows localhost / Host header fallbacks for developer convenience.
  */
 function validateSameOrigin(request: Request): boolean {
   const originHeader = request.headers.get('origin');
@@ -23,26 +22,23 @@ function validateSameOrigin(request: Request): boolean {
 
   const targetHeader = originHeader || refererHeader;
   if (!targetHeader) {
-    // Fail closed if state-changing request has no Origin or Referer header in browser context
     return false;
   }
 
   let requestOrigin: string;
   try {
     const parsedTarget = new URL(targetHeader);
-    requestOrigin = parsedTarget.origin; // Normalized protocol + host + port
+    requestOrigin = parsedTarget.origin;
   } catch {
-    // Fail closed if Origin or Referer is malformed
     return false;
   }
 
   const isProduction = process.env.NODE_ENV === 'production';
   const configuredAppUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL;
 
-  // In production, require configured trusted origin and fail closed if missing or mismatched
   if (isProduction) {
     if (!configuredAppUrl) {
-      console.error('[CSRF Security] Production request blocked: Trusted application origin (APP_URL / NEXT_PUBLIC_APP_URL) is not configured.');
+      console.error('[CSRF Security] Production request blocked: Trusted application origin is not configured.');
       return false;
     }
 
@@ -54,8 +50,6 @@ function validateSameOrigin(request: Request): boolean {
     }
   }
 
-  // Non-production (development/testing):
-  // 1. If trusted origin is explicitly configured, check it first
   if (configuredAppUrl) {
     try {
       const canonicalOrigin = new URL(configuredAppUrl).origin;
@@ -63,11 +57,10 @@ function validateSameOrigin(request: Request): boolean {
         return true;
       }
     } catch {
-      // Ignore invalid dev APP_URL gracefully
+      // Ignore
     }
   }
 
-  // 2. Allow localhost / 127.0.0.1 development fallbacks
   const isLocalhost =
     requestOrigin.startsWith('http://localhost:') ||
     requestOrigin.startsWith('http://127.0.0.1:');
@@ -75,7 +68,6 @@ function validateSameOrigin(request: Request): boolean {
     return true;
   }
 
-  // 3. Fallback to matching request Host header in dev if present
   if (hostHeader) {
     try {
       const cleanHost = hostHeader.split(':')[0].toLowerCase();
@@ -90,14 +82,13 @@ function validateSameOrigin(request: Request): boolean {
 }
 
 export async function POST(request: Request, { params }: RouteContext) {
-  // 1. Authenticate Admin Session Server-Side
-  const session = await getAuthenticatedAdminServer();
-  if (!session) {
-    return NextResponse.json(
-      { error: 'Unauthorized: Valid admin session required.' },
-      { status: 401 }
-    );
+  // 1. Central RBAC Authorization Guard (Server Authoritative)
+  const auth = await authorizeAdminCapability('ADJUST_INVENTORY');
+  if (!auth.authorized) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
+
+  const { admin } = auth;
 
   // 2. CSRF / Same-Origin Protection Strategy
   if (!validateSameOrigin(request)) {
@@ -147,7 +138,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       );
     }
 
-    // 5. Execute Atomic Database Transaction with Row Locking
+    // 5. Execute Atomic Database Transaction (Mutation + Specialized Audit + Central AdminAuditLog)
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
@@ -166,7 +157,6 @@ export async function POST(request: Request, { params }: RouteContext) {
       const previousStock = prodRes.rows[0].stock;
       const newStock = previousStock + delta;
 
-      // Reject adjustment if resulting stock would be negative
       if (newStock < 0) {
         await client.query('ROLLBACK');
         return NextResponse.json(
@@ -185,12 +175,30 @@ export async function POST(request: Request, { params }: RouteContext) {
         [newStock, productId]
       );
 
-      // Insert InventoryAdjustment audit record in the SAME transaction
+      // 1. Insert InventoryAdjustment specialized audit record in SAME transaction
       const auditRes = await client.query(
         `INSERT INTO "inventoryAdjustment" (id, "productId", "adminId", "previousStock", "newStock", delta, reason, "createdAt")
          VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, NOW())
          RETURNING id, "createdAt"`,
-        [productId, session.id, previousStock, newStock, delta, cleanReason]
+        [productId, admin.id, previousStock, newStock, delta, cleanReason]
+      );
+
+      // 2. Insert Centralized AdminAuditLog in SAME transaction
+      await recordAdminAuditLog(
+        {
+          adminId: admin.id,
+          action: 'INVENTORY_ADJUSTED',
+          entityType: 'Product',
+          entityId: productId,
+          metadata: {
+            productId,
+            delta,
+            previousStock,
+            newStock,
+            reason: cleanReason,
+          },
+        },
+        client
       );
 
       await client.query('COMMIT');
@@ -203,9 +211,9 @@ export async function POST(request: Request, { params }: RouteContext) {
           adjustment: {
             id: auditRecord.id,
             productId,
-            adminId: session.id,
-            adminEmail: session.email,
-            adminName: session.name,
+            adminId: admin.id,
+            adminEmail: admin.email,
+            adminName: admin.name,
             previousStock,
             newStock,
             delta,

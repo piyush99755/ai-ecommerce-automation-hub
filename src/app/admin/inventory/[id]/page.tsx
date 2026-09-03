@@ -1,25 +1,29 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { getAuthenticatedAdminServer } from '@/lib/admin-auth';
+import { authorizeAdminCapability, hasAdminCapability } from '@/lib/admin-rbac';
 import { fetchDetailedInventoryWorkspace } from '@/lib/inventory-workspace';
 import { formatCurrencyCents, InventoryState } from '@/lib/admin-inventory';
 import { InventoryActivityTimeline } from '@/components/admin/InventoryActivityTimeline';
 import { AdjustStockForm } from '@/components/admin/AdjustStockForm';
 import { InventoryAdjustmentTable } from '@/components/admin/InventoryAdjustmentTable';
+import { AccessDenied } from '@/components/admin/AccessDenied';
 
 export default async function AdminProductInventoryDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  // Server-side authorization check before querying inventory records or rendering data
-  const session = await getAuthenticatedAdminServer();
-  if (!session) {
-    redirect('/admin/login');
+  const auth = await authorizeAdminCapability('VIEW_INVENTORY');
+  if (!auth.authorized) {
+    if (auth.status === 401) {
+      redirect('/admin/login');
+    }
+    return <AccessDenied error={auth.error} capability="VIEW_INVENTORY" />;
   }
 
-  const { id } = await params;
+  const canAdjustStock = hasAdminCapability(auth.admin.role, 'ADJUST_INVENTORY');
 
+  const { id } = await params;
   const workspace = await fetchDetailedInventoryWorkspace(id);
 
   if (!workspace) {
@@ -37,64 +41,61 @@ export default async function AdminProductInventoryDetailPage({
     );
   }
 
-  const { product, orderUsage, adjustments, timeline, schemaNote } = workspace;
+  const { product, adjustments, orderUsage, timeline } = workspace;
+  const inventoryState = product.state;
 
   const getStateBadge = (s: InventoryState) => {
     switch (s) {
       case 'IN_STOCK':
         return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
       case 'LOW_STOCK':
-        return 'bg-amber-500/10 text-amber-400 border-amber-500/20 font-bold';
+        return 'bg-amber-500/20 text-amber-400 border-amber-500/40 font-extrabold animate-pulse';
       case 'OUT_OF_STOCK':
-        return 'bg-rose-500/10 text-rose-400 border-rose-500/20 font-extrabold';
-    }
-  };
-
-  const getOrderStatusBadge = (s: string) => {
-    switch (s) {
-      case 'PROCESSING':
-        return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
-      case 'SHIPPED':
-        return 'bg-sky-500/10 text-sky-400 border-sky-500/20';
-      case 'DELIVERED':
-        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-      default:
-        return 'bg-slate-800 text-slate-400 border-slate-700';
+        return 'bg-rose-500/20 text-rose-400 border-rose-500/40 font-extrabold shadow-sm shadow-rose-950';
     }
   };
 
   return (
     <div className="space-y-8">
+      {/* Breadcrumb & Navigation */}
+      <div>
+        <Link href="/admin/inventory" className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold inline-flex items-center space-x-1">
+          <span>← Back to Inventory List</span>
+        </Link>
+      </div>
+
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <Link href="/admin/inventory" className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold inline-block mb-2">
-            ← Back to Inventory Console
-          </Link>
-          <h1 className="text-2xl font-bold text-white tracking-tight">{product.name}</h1>
-          <p className="text-sm text-slate-400 font-mono mt-0.5">
-            SKU: {product.slug} • Category: {product.category}
+          <div className="flex items-center space-x-3">
+            <h1 className="text-2xl font-bold text-white tracking-tight">{product.name}</h1>
+            <span className={`text-xs px-2.5 py-1 rounded-md border font-mono ${getStateBadge(inventoryState)}`}>
+              {inventoryState}
+            </span>
+          </div>
+          <p className="text-sm text-slate-400 mt-1">
+            Category: <span className="text-slate-300 font-semibold">{product.category}</span> | Slug: <span className="font-mono text-xs text-slate-400">{product.slug}</span>
           </p>
         </div>
-        <div className="flex items-center space-x-3">
-          <span className={`text-xs font-bold px-3 py-1.5 rounded-lg border ${getStateBadge(product.state)}`}>
-            {product.state.replace('_', ' ')}
-          </span>
+
+        <div className="text-right text-xs text-slate-400 font-mono">
+          <div>Product ID: <span className="text-white font-semibold">{product.id}</span></div>
+          <div className="mt-0.5 text-slate-500">Last updated: {new Date(product.updatedAt).toLocaleString()}</div>
         </div>
       </div>
 
-      {/* Product & Stock Details Card */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Product Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-2">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Stock</div>
+          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Stock Snapshot</div>
           <div className="text-3xl font-black text-white">{product.stock} <span className="text-xs font-normal text-slate-400">units</span></div>
-          <div className="text-[10px] text-slate-500">Live PostgreSQL snapshot</div>
+          <div className="text-[10px] text-slate-500">Live PostgreSQL row count</div>
         </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-2">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Low-Stock Threshold</div>
+          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Low Stock Threshold</div>
           <div className="text-3xl font-black text-amber-400">{product.lowStockThreshold} <span className="text-xs font-normal text-slate-400">units</span></div>
-          <div className="text-[10px] text-slate-500">Alert trigger limit</div>
+          <div className="text-[10px] text-slate-500">Alert triggers when stock ≤ threshold</div>
         </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-2">
@@ -110,8 +111,15 @@ export default async function AdminProductInventoryDetailPage({
         </div>
       </div>
 
-      {/* Audited Manual Stock Adjust Interface */}
-      <AdjustStockForm productId={product.id} currentStock={product.stock} />
+      {/* Audited Manual Stock Adjust Interface (Only rendered if admin possesses ADJUST_INVENTORY capability) */}
+      {canAdjustStock ? (
+        <AdjustStockForm productId={product.id} currentStock={product.stock} />
+      ) : (
+        <div className="p-4 bg-slate-900/60 border border-slate-800 rounded-2xl text-xs text-slate-400 flex items-center justify-between">
+          <span>🔒 Manual stock adjustment is restricted to Super Admin and Operations roles.</span>
+          <span className="font-mono text-slate-500">Role: {auth.admin.role}</span>
+        </div>
+      )}
 
       {/* Main Grid: History Tables & Activity Timeline */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -158,24 +166,22 @@ export default async function AdminProductInventoryDetailPage({
                       </td>
                       <td className="px-5 py-4">
                         {u.inventoryDecremented ? (
-                          <span className="text-[11px] font-bold px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded">
-                            Decremented
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            Decremented (-{u.quantityPurchased})
                           </span>
                         ) : (
-                          <span className="text-[11px] font-medium px-2 py-0.5 bg-slate-800 text-slate-400 border border-slate-700 rounded">
-                            Pending Fulfillment
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            Not Decremented
                           </span>
                         )}
                       </td>
-                      <td className="px-5 py-4">
-                        <span className={`text-[11px] font-bold px-2.5 py-1 rounded-md border ${getOrderStatusBadge(u.orderStatus)}`}>
-                          {u.orderStatus}
-                        </span>
+                      <td className="px-5 py-4 font-mono text-xs text-slate-300">
+                        {u.orderStatus}
                       </td>
                       <td className="px-5 py-4 text-right">
                         <Link
                           href={`/admin/orders/${u.orderId}`}
-                          className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 rounded-lg border border-slate-700 transition-colors inline-block"
+                          className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 rounded-lg border border-slate-700 transition-colors inline-block"
                         >
                           View Order →
                         </Link>
@@ -186,18 +192,9 @@ export default async function AdminProductInventoryDetailPage({
               </table>
             )}
           </div>
-
-          {/* Audit Schema Note Panel */}
-          <div className="p-4 bg-slate-950/60 border border-slate-800 rounded-2xl text-xs text-slate-400 space-y-2">
-            <div className="font-bold text-white flex items-center space-x-2">
-              <span>📋</span>
-              <span>Inventory Audit Architecture</span>
-            </div>
-            <p className="leading-relaxed">{schemaNote}</p>
-          </div>
         </div>
 
-        {/* Right Column (1 Col): Inventory Activity Timeline */}
+        {/* Right Column (1 Col): Activity Timeline */}
         <div className="space-y-6">
           <InventoryActivityTimeline timeline={timeline} />
         </div>

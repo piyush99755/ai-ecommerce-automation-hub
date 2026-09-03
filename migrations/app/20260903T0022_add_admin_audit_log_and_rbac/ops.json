@@ -1,0 +1,365 @@
+[
+  {
+    "id": "dropCheckConstraint.admin.admin_role_check_d64e1afa",
+    "label": "Drop check constraint \"admin_role_check_d64e1afa\" on \"admin\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "admin_role_check_d64e1afa",
+        "table": "admin"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"admin_role_check_d64e1afa\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "admin_role_check_d64e1afa",
+          "public",
+          "\"public\".\"admin\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop check constraint \"admin_role_check_d64e1afa\"",
+        "sql": "ALTER TABLE \"public\".\"admin\" DROP CONSTRAINT \"admin_role_check_d64e1afa\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"admin_role_check_d64e1afa\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "admin_role_check_d64e1afa",
+          "public",
+          "\"public\".\"admin\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.adminAuditLog",
+    "label": "Create table \"adminAuditLog\"",
+    "summary": "Creates table \"adminAuditLog\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "adminAuditLog"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"adminAuditLog\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adminAuditLog\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"adminAuditLog\"",
+        "sql": "CREATE TABLE \"public\".\"adminAuditLog\" (\n  \"action\" text NOT NULL,\n  \"adminId\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"entityId\" text NOT NULL,\n  \"entityType\" text NOT NULL,\n  \"id\" text DEFAULT (gen_random_uuid()) NOT NULL,\n  \"metadata\" json,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"adminAuditLog\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adminAuditLog\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "setDefault.admin.role",
+    "label": "Set default on \"admin\".\"role\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "role",
+        "table": "admin"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"role\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "admin",
+          "role"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "set default on \"role\"",
+        "sql": "ALTER TABLE \"public\".\"admin\" ALTER COLUMN \"role\" SET DEFAULT 'SUPER_ADMIN'"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"role\" has a default",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"column_default\" IS NOT NULL)) AS \"result\"",
+        "params": [
+          "public",
+          "admin",
+          "role"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.admin.admin_role_check_a968123a",
+    "label": "Add check constraint \"admin_role_check_a968123a\" on \"admin\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "admin_role_check_a968123a",
+        "table": "admin"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"admin_role_check_a968123a\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "admin_role_check_a968123a",
+          "public",
+          "\"public\".\"admin\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"admin_role_check_a968123a\"",
+        "sql": "ALTER TABLE \"public\".\"admin\" ADD CONSTRAINT \"admin_role_check_a968123a\" CHECK (\"role\" IN ('SUPER_ADMIN', 'OPERATIONS', 'SUPPORT'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"admin_role_check_a968123a\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "admin_role_check_a968123a",
+          "public",
+          "\"public\".\"admin\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.adminAuditLog.adminAuditLog_action_createdAt_idx_a6d20b4b",
+    "label": "Create index \"adminAuditLog_action_createdAt_idx_a6d20b4b\" on \"adminAuditLog\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "adminAuditLog_action_createdAt_idx_a6d20b4b",
+        "table": "adminAuditLog"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"adminAuditLog_action_createdAt_idx_a6d20b4b\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adminAuditLog_action_createdAt_idx_a6d20b4b\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"adminAuditLog_action_createdAt_idx_a6d20b4b\"",
+        "sql": "CREATE INDEX \"adminAuditLog_action_createdAt_idx_a6d20b4b\" ON \"public\".\"adminAuditLog\" (\"action\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"adminAuditLog_action_createdAt_idx_a6d20b4b\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adminAuditLog_action_createdAt_idx_a6d20b4b\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.adminAuditLog.adminAuditLog_adminId_createdAt_idx_5015ed56",
+    "label": "Create index \"adminAuditLog_adminId_createdAt_idx_5015ed56\" on \"adminAuditLog\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "adminAuditLog_adminId_createdAt_idx_5015ed56",
+        "table": "adminAuditLog"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"adminAuditLog_adminId_createdAt_idx_5015ed56\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adminAuditLog_adminId_createdAt_idx_5015ed56\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"adminAuditLog_adminId_createdAt_idx_5015ed56\"",
+        "sql": "CREATE INDEX \"adminAuditLog_adminId_createdAt_idx_5015ed56\" ON \"public\".\"adminAuditLog\" (\"adminId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"adminAuditLog_adminId_createdAt_idx_5015ed56\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adminAuditLog_adminId_createdAt_idx_5015ed56\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.adminAuditLog.adminAuditLog_adminId_idx_530179db",
+    "label": "Create index \"adminAuditLog_adminId_idx_530179db\" on \"adminAuditLog\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "adminAuditLog_adminId_idx_530179db",
+        "table": "adminAuditLog"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"adminAuditLog_adminId_idx_530179db\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adminAuditLog_adminId_idx_530179db\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"adminAuditLog_adminId_idx_530179db\"",
+        "sql": "CREATE INDEX \"adminAuditLog_adminId_idx_530179db\" ON \"public\".\"adminAuditLog\" (\"adminId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"adminAuditLog_adminId_idx_530179db\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adminAuditLog_adminId_idx_530179db\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.adminAuditLog.adminAuditLog_entityType_entityId_createdAt_idx_e9eb579f",
+    "label": "Create index \"adminAuditLog_entityType_entityId_createdAt_idx_e9eb579f\" on \"adminAuditLog\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "adminAuditLog_entityType_entityId_createdAt_idx_e9eb579f",
+        "table": "adminAuditLog"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"adminAuditLog_entityType_entityId_createdAt_idx_e9eb579f\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adminAuditLog_entityType_entityId_createdAt_idx_e9eb579f\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"adminAuditLog_entityType_entityId_createdAt_idx_e9eb579f\"",
+        "sql": "CREATE INDEX \"adminAuditLog_entityType_entityId_createdAt_idx_e9eb579f\" ON \"public\".\"adminAuditLog\" (\"entityType\", \"entityId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"adminAuditLog_entityType_entityId_createdAt_idx_e9eb579f\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adminAuditLog_entityType_entityId_createdAt_idx_e9eb579f\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.adminAuditLog.adminAuditLog_adminId_fkey",
+    "label": "Add foreign key \"adminAuditLog_adminId_fkey\" on \"adminAuditLog\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "adminAuditLog_adminId_fkey",
+        "table": "adminAuditLog"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"adminAuditLog_adminId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "adminAuditLog_adminId_fkey",
+          "public",
+          "\"public\".\"adminAuditLog\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"adminAuditLog_adminId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"adminAuditLog\"\nADD CONSTRAINT \"adminAuditLog_adminId_fkey\"\nFOREIGN KEY (\"adminId\")\nREFERENCES \"public\".\"admin\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"adminAuditLog_adminId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "adminAuditLog_adminId_fkey",
+          "public",
+          "\"public\".\"adminAuditLog\""
+        ]
+      }
+    ]
+  }
+]

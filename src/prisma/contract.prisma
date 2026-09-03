@@ -24,7 +24,9 @@ enum OutboxStatus {
 }
 
 enum AdminRole {
-  ADMIN
+  SUPER_ADMIN
+  OPERATIONS
+  SUPPORT
 }
 
 model Admin {
@@ -32,11 +34,27 @@ model Admin {
   email                 String                 @unique
   passwordHash          String
   name                  String
-  role                  AdminRole              @default(ADMIN)
+  role                  AdminRole              @default(SUPER_ADMIN)
   inventoryAdjustments  InventoryAdjustment[]
   outboxRecoveryActions OutboxRecoveryAction[]
+  auditLogs             AdminAuditLog[]
   createdAt             TimestamptzString      @default(now())
   updatedAt             temporal.updatedAtString()
+}
+
+model AdminAuditLog {
+  id         String            @id @default(dbgenerated("gen_random_uuid()"))
+  adminId    String
+  admin      Admin             @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json?
+  createdAt  TimestamptzString @default(now())
+
+  @@index([adminId, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@index([action, createdAt])
 }
 
 model Product {

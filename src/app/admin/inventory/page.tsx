@@ -4,6 +4,8 @@ import { getAuthenticatedAdminServer } from '@/lib/admin-auth';
 import { fetchAdminInventory, formatCurrencyCents, InventoryState } from '@/lib/admin-inventory';
 import { InventoryMetricsHeader } from '@/components/admin/InventoryMetricsHeader';
 import { InventoryTableFilterControls } from '@/components/admin/InventoryTableFilterControls';
+import { authorizeAdminCapability } from '@/lib/admin-rbac';
+import { AccessDenied } from '@/components/admin/AccessDenied';
 
 export default async function AdminInventoryPage({
   searchParams,
@@ -15,10 +17,12 @@ export default async function AdminInventoryPage({
     page?: string;
   }>;
 }) {
-  // Server-side authorization check before querying inventory records or rendering data
-  const session = await getAuthenticatedAdminServer();
-  if (!session) {
-    redirect('/admin/login');
+  const auth = await authorizeAdminCapability('VIEW_INVENTORY');
+  if (!auth.authorized) {
+    if (auth.status === 401) {
+      redirect('/admin/login');
+    }
+    return <AccessDenied error={auth.error} capability="VIEW_INVENTORY" />;
   }
 
   const { q, state, category, page } = await searchParams;

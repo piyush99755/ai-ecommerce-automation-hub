@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { getAuthenticatedAdminServer } from '@/lib/admin-auth';
+import { authorizeAdminCapability } from '@/lib/admin-rbac';
 import { fetchAdminOrders, formatCurrencyCents } from '@/lib/admin-orders';
 import { OrdersTableFilterControls } from '@/components/admin/OrdersTableFilterControls';
+import { AccessDenied } from '@/components/admin/AccessDenied';
 
 export default async function AdminOrdersPage({
   searchParams,
@@ -14,10 +15,12 @@ export default async function AdminOrdersPage({
     page?: string;
   }>;
 }) {
-  // Server-side authorization check before querying orders or rendering data
-  const session = await getAuthenticatedAdminServer();
-  if (!session) {
-    redirect('/admin/login');
+  const auth = await authorizeAdminCapability('VIEW_ORDERS');
+  if (!auth.authorized) {
+    if (auth.status === 401) {
+      redirect('/admin/login');
+    }
+    return <AccessDenied error={auth.error} capability="VIEW_ORDERS" />;
   }
 
   const { q, status, paymentStatus, page } = await searchParams;

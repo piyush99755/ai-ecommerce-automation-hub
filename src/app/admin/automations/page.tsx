@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getAuthenticatedAdminServer } from '@/lib/admin-auth';
+import { authorizeAdminCapability } from '@/lib/admin-rbac';
+import { AccessDenied } from '@/components/admin/AccessDenied';
 import { fetchOutboxEventsPage } from '@/lib/admin-automations';
 import { OutboxMetricsHeader } from '@/components/admin/OutboxMetricsHeader';
 import { OutboxTableFilterControls } from '@/components/admin/OutboxTableFilterControls';
@@ -15,10 +17,12 @@ export default async function AdminAutomationsListPage({
     page?: string;
   }>;
 }) {
-  // Server-side authorization check before querying outbox events or rendering page
-  const session = await getAuthenticatedAdminServer();
-  if (!session) {
-    redirect('/admin/login');
+  const auth = await authorizeAdminCapability('VIEW_AUTOMATIONS');
+  if (!auth.authorized) {
+    if (auth.status === 401) {
+      redirect('/admin/login');
+    }
+    return <AccessDenied error={auth.error} capability="VIEW_AUTOMATIONS" />;
   }
 
   const { q = '', status = 'ALL', eventType = 'ALL', page = '1' } = await searchParams;

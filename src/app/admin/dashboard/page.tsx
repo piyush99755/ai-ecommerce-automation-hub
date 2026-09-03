@@ -1,19 +1,23 @@
 import { redirect } from 'next/navigation';
-import { getAuthenticatedAdminServer } from '@/lib/admin-auth';
+import { authorizeAdminCapability } from '@/lib/admin-rbac';
 import { fetchDashboardMetrics } from '@/lib/admin-dashboard';
 import { DashboardKpis } from '@/components/admin/DashboardKpis';
 import { RecentOrdersTable } from '@/components/admin/RecentOrdersTable';
 import { InventoryAttentionPanel } from '@/components/admin/InventoryAttentionPanel';
 import { AutomationHealthPanel } from '@/components/admin/AutomationHealthPanel';
 import { OrderStatusDistribution } from '@/components/admin/OrderStatusDistribution';
+import { AccessDenied } from '@/components/admin/AccessDenied';
 
 export default async function AdminDashboardPage() {
-  const session = await getAuthenticatedAdminServer();
-  if (!session) {
-    redirect('/admin/login');
+  const auth = await authorizeAdminCapability('VIEW_DASHBOARD');
+  if (!auth.authorized) {
+    if (auth.status === 401) {
+      redirect('/admin/login');
+    }
+    return <AccessDenied error={auth.error} capability="VIEW_DASHBOARD" />;
   }
 
-  // Fetch real PostgreSQL metrics concurrently
+  // Fetch real PostgreSQL metrics concurrently ONLY after authoritative capability verification
   const data = await fetchDashboardMetrics();
 
   return (

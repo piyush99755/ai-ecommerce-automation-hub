@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { getAuthenticatedAdminServer } from '@/lib/admin-auth';
+import { authorizeAdminCapability, hasAdminCapability } from '@/lib/admin-rbac';
+import { AccessDenied } from '@/components/admin/AccessDenied';
 import { fetchDetailedAutomationWorkspace, formatCurrencyCents } from '@/lib/admin-automations';
 import { RequeueEventModal } from '@/components/admin/RequeueEventModal';
 
@@ -9,11 +10,15 @@ export default async function AdminAutomationDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  // Server-side authorization check before querying outbox details or rendering page
-  const session = await getAuthenticatedAdminServer();
-  if (!session) {
-    redirect('/admin/login');
+  const auth = await authorizeAdminCapability('VIEW_AUTOMATIONS');
+  if (!auth.authorized) {
+    if (auth.status === 401) {
+      redirect('/admin/login');
+    }
+    return <AccessDenied error={auth.error} capability="VIEW_AUTOMATIONS" />;
   }
+
+  const canRequeue = hasAdminCapability(auth.admin.role, 'REQUEUE_AUTOMATION');
 
   const { id } = await params;
 
@@ -98,13 +103,19 @@ export default async function AdminAutomationDetailPage({
         </div>
 
         {/* Manual Requeue Action Trigger */}
-        <RequeueEventModal
-          eventId={event.id}
-          shortId={event.shortId}
-          eventType={event.eventType}
-          status={event.status}
-          orderStatus={relatedOrder?.status}
-        />
+        {canRequeue ? (
+          <RequeueEventModal
+            eventId={event.id}
+            shortId={event.shortId}
+            eventType={event.eventType}
+            status={event.status}
+            orderStatus={relatedOrder?.status}
+          />
+        ) : (
+          <span className="text-xs font-mono text-slate-500 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg">
+            🔒 Requeue Action Restricted
+          </span>
+        )}
       </div>
 
       {/* Main Grid: Event Details & Reliability Timeline */}

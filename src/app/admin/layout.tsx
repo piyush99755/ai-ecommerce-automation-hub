@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getAuthenticatedAdminServer } from '@/lib/admin-auth';
+import { getFreshAdmin, hasAdminCapability } from '@/lib/admin-rbac';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 
 export default async function AdminLayout({
@@ -10,20 +11,25 @@ export default async function AdminLayout({
 }) {
   const session = await getAuthenticatedAdminServer();
 
-  // If user is accessing /admin/login, render without sidebar shell
-  // Middleware handles redirects if already authenticated
   if (!session) {
     return <>{children}</>;
   }
 
+  // Fetch fresh Admin record to ensure 100% role freshness in navigation UI
+  const admin = await getFreshAdmin(session.id);
+  const role = admin ? admin.role : 'SUPPORT';
+
   const navItems = [
-    { name: 'Dashboard', href: '/admin/dashboard', icon: '📊' },
-    { name: 'Orders', href: '/admin/orders', icon: '📦' },
-    { name: 'Customers', href: '/admin/customers', icon: '👥' },
-    { name: 'Inventory', href: '/admin/inventory', icon: '🏬' },
-    { name: 'Automations', href: '/admin/automations', icon: '⚡' },
-    { name: 'Analytics', href: '/admin/analytics', icon: '📈' },
+    { name: 'Dashboard', href: '/admin/dashboard', icon: '📊', capability: 'VIEW_DASHBOARD' as const },
+    { name: 'Orders', href: '/admin/orders', icon: '📦', capability: 'VIEW_ORDERS' as const },
+    { name: 'Customers', href: '/admin/customers', icon: '👥', capability: 'VIEW_CUSTOMERS' as const },
+    { name: 'Inventory', href: '/admin/inventory', icon: '🏬', capability: 'VIEW_INVENTORY' as const },
+    { name: 'Automations', href: '/admin/automations', icon: '⚡', capability: 'VIEW_AUTOMATIONS' as const },
+    { name: 'Analytics', href: '/admin/analytics', icon: '📈', capability: 'VIEW_ANALYTICS' as const },
+    { name: 'Audit Trail', href: '/admin/audit', icon: '🛡️', capability: 'VIEW_AUDIT_LOG' as const },
   ];
+
+  const visibleNavItems = navItems.filter((item) => hasAdminCapability(role, item.capability));
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex">
@@ -40,7 +46,7 @@ export default async function AdminLayout({
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -67,7 +73,7 @@ export default async function AdminLayout({
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        <AdminHeader adminEmail={session.email} adminName={session.name} />
+        <AdminHeader adminEmail={session.email} adminName={session.name} adminRole={role} />
         <main className="flex-1 p-8 overflow-y-auto">{children}</main>
       </div>
     </div>

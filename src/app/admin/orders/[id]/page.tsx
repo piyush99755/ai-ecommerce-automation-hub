@@ -5,6 +5,8 @@ import { fetchDetailedOrderWorkspace } from '@/lib/order-timeline';
 import { formatCurrencyCents } from '@/lib/admin-dashboard';
 import { OrderActivityTimeline } from '@/components/admin/OrderActivityTimeline';
 import { AutomationEventsSection } from '@/components/admin/AutomationEventsSection';
+import { authorizeAdminCapability } from '@/lib/admin-rbac';
+import { AccessDenied } from '@/components/admin/AccessDenied';
 
 function maskId(id: string | null | undefined): string {
   if (!id) return 'None';
@@ -17,10 +19,12 @@ export default async function AdminOrderDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  // Enforce server-side authorization check before querying customer or order records
-  const session = await getAuthenticatedAdminServer();
-  if (!session) {
-    redirect('/admin/login');
+  const auth = await authorizeAdminCapability('VIEW_ORDERS');
+  if (!auth.authorized) {
+    if (auth.status === 401) {
+      redirect('/admin/login');
+    }
+    return <AccessDenied error={auth.error} capability="VIEW_ORDERS" />;
   }
 
   const { id } = await params;
