@@ -16,7 +16,8 @@ export type AdminCapability =
   | 'VIEW_AUTOMATIONS'
   | 'REQUEUE_AUTOMATION'
   | 'VIEW_ANALYTICS'
-  | 'VIEW_AUDIT_LOG';
+  | 'VIEW_AUDIT_LOG'
+  | 'USE_AI_COPILOT';
 
 const ROLE_CAPABILITIES: Record<AdminRole, Set<AdminCapability>> = {
   SUPER_ADMIN: new Set<AdminCapability>([
@@ -29,6 +30,7 @@ const ROLE_CAPABILITIES: Record<AdminRole, Set<AdminCapability>> = {
     'REQUEUE_AUTOMATION',
     'VIEW_ANALYTICS',
     'VIEW_AUDIT_LOG',
+    'USE_AI_COPILOT',
   ]),
   OPERATIONS: new Set<AdminCapability>([
     'VIEW_DASHBOARD',
@@ -40,6 +42,7 @@ const ROLE_CAPABILITIES: Record<AdminRole, Set<AdminCapability>> = {
     'REQUEUE_AUTOMATION',
     'VIEW_ANALYTICS',
     'VIEW_AUDIT_LOG',
+    'USE_AI_COPILOT',
   ]),
   SUPPORT: new Set<AdminCapability>([
     'VIEW_DASHBOARD',
@@ -48,6 +51,7 @@ const ROLE_CAPABILITIES: Record<AdminRole, Set<AdminCapability>> = {
     'VIEW_INVENTORY',
     'VIEW_AUTOMATIONS',
     'VIEW_ANALYTICS',
+    'USE_AI_COPILOT',
   ]),
 };
 

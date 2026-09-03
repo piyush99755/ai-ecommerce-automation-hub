@@ -27,6 +27,7 @@ export default async function AdminLayout({
     { name: 'Automations', href: '/admin/automations', icon: '⚡', capability: 'VIEW_AUTOMATIONS' as const },
     { name: 'Analytics', href: '/admin/analytics', icon: '📈', capability: 'VIEW_ANALYTICS' as const },
     { name: 'Audit Trail', href: '/admin/audit', icon: '🛡️', capability: 'VIEW_AUDIT_LOG' as const },
+    { name: 'AI Copilot', href: '/admin/copilot', icon: '🧠', capability: 'USE_AI_COPILOT' as const },
   ];
 
   const visibleNavItems = navItems.filter((item) => hasAdminCapability(role, item.capability));
