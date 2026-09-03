@@ -1,0 +1,200 @@
+[
+  {
+    "id": "table.copilotAction",
+    "label": "Create table \"copilotAction\"",
+    "summary": "Creates table \"copilotAction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "copilotAction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"copilotAction\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"copilotAction\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"copilotAction\"",
+        "sql": "CREATE TABLE \"public\".\"copilotAction\" (\n  \"actionType\" text NOT NULL,\n  \"adminId\" text NOT NULL,\n  \"completedAt\" timestamptz,\n  \"confirmedAt\" timestamptz,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"entityId\" text NOT NULL,\n  \"entityType\" text NOT NULL,\n  \"expiresAt\" timestamptz NOT NULL,\n  \"id\" text DEFAULT (gen_random_uuid()) NOT NULL,\n  \"payload\" json NOT NULL,\n  \"status\" text DEFAULT 'PROPOSED' NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"copilotAction\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"copilotAction\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.copilotAction.copilotAction_adminId_createdAt_idx_5015ed56",
+    "label": "Create index \"copilotAction_adminId_createdAt_idx_5015ed56\" on \"copilotAction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "copilotAction_adminId_createdAt_idx_5015ed56",
+        "table": "copilotAction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"copilotAction_adminId_createdAt_idx_5015ed56\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"copilotAction_adminId_createdAt_idx_5015ed56\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"copilotAction_adminId_createdAt_idx_5015ed56\"",
+        "sql": "CREATE INDEX \"copilotAction_adminId_createdAt_idx_5015ed56\" ON \"public\".\"copilotAction\" (\"adminId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"copilotAction_adminId_createdAt_idx_5015ed56\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"copilotAction_adminId_createdAt_idx_5015ed56\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.copilotAction.copilotAction_adminId_idx_530179db",
+    "label": "Create index \"copilotAction_adminId_idx_530179db\" on \"copilotAction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "copilotAction_adminId_idx_530179db",
+        "table": "copilotAction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"copilotAction_adminId_idx_530179db\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"copilotAction_adminId_idx_530179db\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"copilotAction_adminId_idx_530179db\"",
+        "sql": "CREATE INDEX \"copilotAction_adminId_idx_530179db\" ON \"public\".\"copilotAction\" (\"adminId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"copilotAction_adminId_idx_530179db\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"copilotAction_adminId_idx_530179db\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.copilotAction.copilotAction_status_expiresAt_idx_c206f415",
+    "label": "Create index \"copilotAction_status_expiresAt_idx_c206f415\" on \"copilotAction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "copilotAction_status_expiresAt_idx_c206f415",
+        "table": "copilotAction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"copilotAction_status_expiresAt_idx_c206f415\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"copilotAction_status_expiresAt_idx_c206f415\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"copilotAction_status_expiresAt_idx_c206f415\"",
+        "sql": "CREATE INDEX \"copilotAction_status_expiresAt_idx_c206f415\" ON \"public\".\"copilotAction\" (\"status\", \"expiresAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"copilotAction_status_expiresAt_idx_c206f415\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"copilotAction_status_expiresAt_idx_c206f415\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.copilotAction.copilotAction_adminId_fkey",
+    "label": "Add foreign key \"copilotAction_adminId_fkey\" on \"copilotAction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "copilotAction_adminId_fkey",
+        "table": "copilotAction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"copilotAction_adminId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "copilotAction_adminId_fkey",
+          "public",
+          "\"public\".\"copilotAction\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"copilotAction_adminId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"copilotAction\"\nADD CONSTRAINT \"copilotAction_adminId_fkey\"\nFOREIGN KEY (\"adminId\")\nREFERENCES \"public\".\"admin\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"copilotAction_adminId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "copilotAction_adminId_fkey",
+          "public",
+          "\"public\".\"copilotAction\""
+        ]
+      }
+    ]
+  }
+]

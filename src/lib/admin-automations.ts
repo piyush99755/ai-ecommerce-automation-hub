@@ -518,3 +518,189 @@ export async function fetchDetailedAutomationWorkspace(
     evidenceNote,
   };
 }
+
+const APPROVED_REPLAY_EVENT_TYPES = new Set([
+  'PAYMENT_SUCCEEDED',
+  'ORDER_PROCESSING_NOTIFICATION',
+  'ORDER_SHIPPED_NOTIFICATION',
+  'ORDER_DELIVERED_NOTIFICATION',
+]);
+
+export interface OutboxEligibilityCheckResult {
+  eligible: boolean;
+  reason: string;
+}
+
+/**
+ * Authoritative Phase 6B State-Aware Replay Eligibility Evaluation.
+ * Rechecked AT PROPOSAL TIME and AT EXECUTION TIME.
+ */
+export async function checkOutboxEventEligibility(
+  eventRow: { id: string; status: string; eventType: string; aggregateId: string },
+  client: pg.PoolClient | pg.Client
+): Promise<OutboxEligibilityCheckResult> {
+  if (eventRow.status !== 'FAILED') {
+    return {
+      eligible: false,
+      reason: `Event status is "${eventRow.status}". Only FAILED events are eligible for manual requeue.`,
+    };
+  }
+
+  if (!APPROVED_REPLAY_EVENT_TYPES.has(eventRow.eventType)) {
+    return {
+      eligible: false,
+      reason: `Manual replay is disabled for event type "${eventRow.eventType}" because downstream side effects are not proven idempotent.`,
+    };
+  }
+
+  if (eventRow.eventType === 'PAYMENT_SUCCEEDED') {
+    const orderRes = await client.query(
+      'SELECT status FROM "order" WHERE id = $1',
+      [eventRow.aggregateId]
+    );
+
+    if (orderRes.rows.length > 0) {
+      const orderStatus = orderRes.rows[0].status;
+      if (orderStatus !== 'PENDING' && orderStatus !== 'PROCESSING') {
+        return {
+          eligible: false,
+          reason: `Manual replay disabled because order has progressed beyond fulfillment (status: "${orderStatus}").`,
+        };
+      }
+    }
+  }
+
+  if (
+    eventRow.eventType === 'ORDER_PROCESSING_NOTIFICATION' ||
+    eventRow.eventType === 'ORDER_SHIPPED_NOTIFICATION' ||
+    eventRow.eventType === 'ORDER_DELIVERED_NOTIFICATION'
+  ) {
+    const ceRes = await client.query(
+      'SELECT id, status, "claimedAt" FROM "consumerEvent" WHERE "consumerId" = \'email-notifier\' AND "eventId" = $1',
+      [eventRow.id]
+    );
+
+    if (ceRes.rows.length > 0) {
+      const ce = ceRes.rows[0];
+      if (ce.status === 'PROCESSING') {
+        const claimedAtTime = new Date(ce.claimedAt).getTime();
+        const isStale = Date.now() - claimedAtTime >= 5 * 60 * 1000;
+        return {
+          eligible: false,
+          reason: isStale
+            ? 'Manual replay disabled due to stale processing lock.'
+            : 'Manual replay disabled while consumer is actively processing this event.',
+        };
+      }
+    }
+  }
+
+  return { eligible: true, reason: 'Eligible for manual requeue' };
+}
+
+export interface RequeueOutboxServiceOptions {
+  eventId: string;
+  adminId: string;
+  reason: string;
+  source?: string;
+  customClient?: pg.PoolClient | pg.Client;
+}
+
+/**
+ * Shared atomic OutboxEvent requeue service.
+ * Performs row locking FOR UPDATE, state-aware eligibility check, outboxEvent update to PENDING,
+ * OutboxRecoveryAction specialized audit, and centralized AdminAuditLog entry.
+ */
+export async function executeOutboxRequeueService(options: RequeueOutboxServiceOptions) {
+  const { eventId, adminId, reason, source = 'ADMIN_CONSOLE', customClient } = options;
+
+  const cleanReason = (reason || '').trim();
+  if (!cleanReason) {
+    throw new Error('Validation Error: Manual recovery reason is required.');
+  }
+
+  const client = customClient || (await pool.connect());
+  const shouldManageTx = !customClient;
+
+  try {
+    if (shouldManageTx) await client.query('BEGIN');
+
+    // Lock OutboxEvent for update
+    const eventRes = await client.query(
+      'SELECT id, status, "eventType", "aggregateId", "attemptCount" FROM "outboxEvent" WHERE id = $1 FOR UPDATE',
+      [eventId]
+    );
+
+    if (eventRes.rows.length === 0) {
+      if (shouldManageTx) await client.query('ROLLBACK');
+      throw new Error('Outbox Event not found.');
+    }
+
+    const eventRow = eventRes.rows[0];
+
+    // TOCTOU Re-Validation AT EXECUTION TIME
+    const eligibility = await checkOutboxEventEligibility(eventRow, client);
+    if (!eligibility.eligible) {
+      if (shouldManageTx) await client.query('ROLLBACK');
+      const err = new Error(eligibility.reason);
+      (err as unknown as Record<string, unknown>)['code'] = 'INELIGIBLE_STATE';
+      throw err;
+    }
+
+    const previousStatus = eventRow.status;
+    const previousAttemptCount = eventRow.attemptCount;
+
+    await client.query(
+      `UPDATE "outboxEvent"
+       SET status = 'PENDING',
+           "attemptCount" = 0,
+           "nextAttemptAt" = NOW()
+       WHERE id = $1`,
+      [eventId]
+    );
+
+    // Insert OutboxRecoveryAction
+    const auditRes = await client.query(
+      `INSERT INTO "outboxRecoveryAction" (id, "outboxEventId", "adminId", action, "previousStatus", "previousAttemptCount", reason, "createdAt")
+       VALUES (gen_random_uuid(), $1, $2, 'REQUEUE', $3, $4, $5, NOW())
+       RETURNING id, "createdAt"`,
+      [eventId, adminId, previousStatus, previousAttemptCount, cleanReason]
+    );
+
+    // Insert Centralized AdminAuditLog
+    await client.query(
+      `INSERT INTO "adminAuditLog" (id, "adminId", action, "entityType", "entityId", metadata, "createdAt")
+       VALUES (gen_random_uuid(), $1, 'OUTBOX_EVENT_REQUEUED', 'OutboxEvent', $2, $3, NOW())`,
+      [
+        adminId,
+        eventId,
+        JSON.stringify({
+          outboxEventId: eventId,
+          eventType: eventRow.eventType,
+          previousStatus,
+          previousAttemptCount,
+          recoveryReason: cleanReason,
+          source,
+        }),
+      ]
+    );
+
+    if (shouldManageTx) await client.query('COMMIT');
+
+    return {
+      success: true,
+      recoveryActionId: auditRes.rows[0].id,
+      outboxEventId: eventId,
+      eventType: eventRow.eventType,
+      previousStatus,
+      previousAttemptCount,
+      reason: cleanReason,
+      createdAt: auditRes.rows[0].createdAt,
+    };
+  } catch (err) {
+    if (shouldManageTx) await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    if (shouldManageTx) (client as pg.PoolClient).release();
+  }
+}

@@ -38,6 +38,7 @@ model Admin {
   inventoryAdjustments  InventoryAdjustment[]
   outboxRecoveryActions OutboxRecoveryAction[]
   auditLogs             AdminAuditLog[]
+  copilotActions        CopilotAction[]
   createdAt             TimestamptzString      @default(now())
   updatedAt             temporal.updatedAtString()
 }
@@ -55,6 +56,24 @@ model AdminAuditLog {
   @@index([adminId, createdAt])
   @@index([entityType, entityId, createdAt])
   @@index([action, createdAt])
+}
+
+model CopilotAction {
+  id          String            @id @default(dbgenerated("gen_random_uuid()"))
+  adminId     String
+  admin       Admin             @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  actionType  String
+  entityType  String
+  entityId    String
+  payload     Json
+  status      String            @default("PROPOSED")
+  expiresAt   TimestamptzString
+  confirmedAt TimestamptzString?
+  completedAt TimestamptzString?
+  createdAt   TimestamptzString @default(now())
+
+  @@index([adminId, createdAt])
+  @@index([status, expiresAt])
 }
 
 model Product {
